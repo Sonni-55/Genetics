@@ -8,7 +8,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 15px;
-            max-width: 480px;
+            max-width: 500px;
             margin: auto;
             background-color: #f4f4f9;
         }
@@ -36,7 +36,7 @@
             padding: 6px 1px;
             border-radius: 6px;
             border: 1px solid #ccc;
-            font-size: 12px;
+            font-size: 11px;
         }
         button {
             width: 100%;
@@ -48,7 +48,11 @@
             cursor: pointer;
             margin-top: 12px;
             padding: 12px;
-            font-size: 16px;
+            font-size: 15px;
+        }
+        .btn-download {
+            background-color: #34c759;
+            margin-top: 8px;
         }
         #canvas {
             width: 100%;
@@ -83,7 +87,14 @@
             </div>
             <div>
                 <label>B (Keho)</label>
-                <select id="isa_b"><option>BB</option><option selected>Bb</option><option>b1b1</option></select>
+                <select id="isa_b">
+                    <option value="BB">BB</option>
+                    <option value="Bb" selected>Bb</option>
+                    <option value="Bb1">Bb1</option>
+                    <option value="bb">bb</option>
+                    <option value="bb1">bb1</option>
+                    <option value="b1b1">b1b1</option>
+                </select>
             </div>
             <div>
                 <label>H (H.Väri)</label>
@@ -94,268 +105,6 @@
                 <select id="isa_o"><option selected>OO</option><option>Oo</option><option>oo</option></select>
             </div>
             <div>
-                <label>N (Näytä)</label>
-                <select id="isa_n"><option>NN</option><option selected>Nn</option><option>nn</option></select>
-            </div>
-        </div>
-
-        <h3>Emä</h3>
-        <div class="grid">
-            <div>
-                <label>M (Harja)</label>
-                <select id="ema_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
-            </div>
-            <div>
-                <label>C (Kihara)</label>
-                <select id="ema_c"><option>CC</option><option selected>Cc</option><option>cc</option></select>
-            </div>
-            <div>
-                <label>B (Keho)</label>
-                <select id="ema_b"><option>BB</option><option selected>Bb</option><option>b1b1</option></select>
-            </div>
-            <div>
-                <label>H (H.Väri)</label>
-                <select id="ema_h"><option>HH</option><option selected>Hh</option><option>hh</option></select>
-            </div>
-            <div>
-                <label>O (Puna)</label>
-                <select id="ema_o"><option selected>OO</option><option>Oo</option><option>oo</option></select>
-            </div>
-            <div>
-                <label>N (Näytä)</label>
-                <select id="ema_n"><option>NN</option><option selected>Nn</option><option>nn</option></select>
-            </div>
-        </div>
-
-        <button onclick="arvoPentu()">Arvo pentu!</button>
-    </div>
-
-    <div class="card">
-        <canvas id="canvas" width="2163" height="1361"></canvas>
-        <div id="tulos" class="tulos">Valitse vanhemmat ja paina nappia.</div>
-    </div>
-
-    <script>
-        function arvoAlleeli(genotyyppi) {
-            let alleelit = [];
-            if (genotyyppi === "b1b1") alleelit = ["b1", "b1"];
-            else if (genotyyppi.includes("b1")) {
-                let muu = genotyyppi.replace("b1", "");
-                alleelit = [muu, "b1"];
-            } else {
-                alleelit = [genotyyppi[0], genotyyppi[1]];
-            }
-            return alleelit[Math.floor(Math.random() * 2)];
-        }
-
-        function luoGenotyyppi(g1, g2) {
-            let a1 = arvoAlleeli(g1);
-            let a2 = arvoAlleeli(g2);
-            return [a1, a2].sort().join("");
-        }
-
-        function varioiHSL(h, s, l) {
-            let dH = h + (Math.random() * 10 - 5);
-            let dS = Math.max(0, Math.min(100, s + (Math.random() * 10 - 5)));
-            let dL = Math.max(0, Math.min(100, l + (Math.random() * 12 - 6)));
-            return `hsl(${dH}, ${dS}%, ${dL}%)`;
-        }
-
-        function piirraCalicoLaikut(ctx, width, height, vari, maara = 10) {
-            ctx.fillStyle = vari;
-            for (let i = 0; i < maara; i++) {
-                let keskiX = Math.random() * width;
-                let keskiY = Math.random() * height;
-                let ympyroita = 6 + Math.floor(Math.random() * 8);
-
-                ctx.beginPath();
-                for (let j = 0; j < ympyroita; j++) {
-                    let offsetX = (Math.random() - 0.5) * 180;
-                    let offsetY = (Math.random() - 0.5) * 180;
-                    let sade = 40 + Math.random() * 90;
-                    ctx.arc(keskiX + offsetX, keskiY + offsetY, sade, 0, Math.PI * 2);
-                }
-                ctx.fill();
-            }
-        }
-
-        function arvoPentu() {
-            // 1. Lue valikot
-            let isaM = document.getElementById("isa_m").value;
-            let isaC = document.getElementById("isa_c").value;
-            let isaB = document.getElementById("isa_b").value;
-            let isaH = document.getElementById("isa_h").value;
-            let isaO = document.getElementById("isa_o").value;
-            let isaN = document.getElementById("isa_n").value;
-
-            let emaM = document.getElementById("ema_m").value;
-            let emaC = document.getElementById("ema_c").value;
-            let emaB = document.getElementById("ema_b").value;
-            let emaH = document.getElementById("ema_h").value;
-            let emaO = document.getElementById("ema_o").value;
-            let emaN = document.getElementById("ema_n").value;
-
-            // 2. Arvo pennun genotyypit
-            let pentuM = luoGenotyyppi(isaM, emaM);
-            let pentuC = luoGenotyyppi(isaC, emaC);
-            let pentuB = luoGenotyyppi(isaB, emaB);
-            let pentuH = luoGenotyyppi(isaH, emaH);
-            let pentuO = luoGenotyyppi(isaO, emaO);
-            let pentuN = luoGenotyyppi(isaN, emaN);
-
-            // 3. Määritä fenotyypit
-            let onkoHarja = pentuM.includes("M");
-            let onkoKihara = (pentuC === "cc");
-
-            // Kehon tumma väri (B-geeni)
-            let tummaHSL;
-            if (pentuB.includes("B")) tummaHSL = { h: 30, s: 5, l: 18 };
-            else if (pentuB.includes("b") && !pentuB.includes("b1b1")) tummaHSL = { h: 25, s: 40, l: 25 };
-            else tummaHSL = { h: 20, s: 50, l: 40 };
-
-            // Harjan oma väri (H-geeni)
-            let harjaHSL, harjaNimi;
-            if (pentuH.includes("H") && pentuH.includes("h")) {
-                harjaHSL = { h: 25, s: 35, l: 25 }; // Hh = Ruskea harja
-                harjaNimi = "Ruskea harja";
-            } else if (pentuH === "HH") {
-                harjaHSL = { h: 30, s: 5, l: 15 };  // HH = Musta harja
-                harjaNimi = "Musta harja";
-            } else {
-                harjaHSL = { h: 35, s: 60, l: 70 }; // hh = Vaalea/Pehmeä harja
-                harjaNimi = "Vaalea harja";
-            }
-
-            // Punainen väri (O-geeni)
-            let punainenHSL = (pentuO === "oo") 
-                ? { h: 32, s: 60, l: 75 } 
-                : { h: 20, s: 80, l: 50 };
-
-            // Uniikit HSL-sävyt
-            let variTumma = varioiHSL(tummaHSL.h, tummaHSL.s, tummaHSL.l);
-            let variPunainen = varioiHSL(punainenHSL.h, punainenHSL.s, punainenHSL.l);
-            let variHarja = varioiHSL(harjaHSL.h, harjaHSL.s, harjaHSL.l);
-
-            // N-geenin kuviointi keholle
-            let paavari = "";
-            let laikkavari = null;
-
-            if (pentuN === "NN") paavari = variTumma;
-            else if (pentuN === "nn") paavari = variPunainen;
-            else {
-                paavari = variPunainen;
-                laikkavari = variTumma;
-            }
-
-            // 4. Kuvien määritys
-            let pohjaTiedosto = onkoKihara 
-                ? "Untitled309_20261008151142.png" 
-                : "Untitled309_20261008151151.png";
-
-            let pohjaHarjaTiedosto = onkoHarja 
-                ? (onkoKihara ? "Untitled309_20261008151613.png" : "Untitled309_20261008151605.png") 
-                : null;
-
-            let viivaTiedosto = onkoKihara 
-                ? "Untitled309_20261008153435.png" 
-                : "Untitled309_20261008153442.png";
-
-            let viivaHarjaTiedosto = onkoHarja 
-                ? (onkoKihara ? "Untitled309_20261008153420.png" : "Untitled309_20261008153429.png") 
-                : null;
-
-            // 5. Päivitä teksti
-            let harjaTeksti = onkoHarja ? `Harja (${harjaNimi})` : "Ei harjaa";
-
-            document.getElementById("tulos").innerText = 
-                `Genotyyppi: ${pentuM} / ${pentuC} / ${pentuB} / ${pentuH} / ${pentuO} / ${pentuN}\n` +
-                `Ominaisuudet: ${harjaTeksti}`;
-
-            // 6. Piirretään kuva kankaalle
-            piirraErillinenHarjaPentu(pohjaTiedosto, pohjaHarjaTiedosto, viivaTiedosto, viivaHarjaTiedosto, paavari, laikkavari, variHarja);
-        }
-
-        function lataaKuva(url) {
-            return new Promise((resolve) => {
-                if (!url) return resolve(null);
-                const img = new Image();
-                img.onload = () => resolve(img);
-                img.onerror = () => resolve(null);
-                img.src = url;
-            });
-        }
-
-        async function piirraErillinenHarjaPentu(pohja, pohjaHarja, viiva, viivaHarja, kehoVari, laikkavari, harjaVari) {
-            const canvas = document.getElementById("canvas");
-            const ctx = canvas.getContext("2d");
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            const [imgPohja, imgPohjaHarja, imgViiva, imgViivaHarja] = await Promise.all([
-                lataaKuva(pohja),
-                lataaKuva(pohjaHarja),
-                lataaKuva(viiva),
-                lataaKuva(viivaHarja)
-            ]);
-
-            // VAIHE 1: PIIRRETÄÄN KEHO
-            if (imgPohja) {
-                ctx.globalCompositeOperation = "source-over";
-                ctx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
-
-                ctx.globalCompositeOperation = "source-in";
-                ctx.fillStyle = kehoVari;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                if (laikkavari) {
-                    ctx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(ctx, canvas.width, canvas.height, laikkavari, 10);
-                }
-            }
-
-            // VAIHE 2: PIIRRETÄÄN HARJA ERILLISENÄ KERROKSENA
-            if (imgPohjaHarja) {
-                const tempCanvas = document.createElement("canvas");
-                tempCanvas.width = canvas.width;
-                tempCanvas.height = canvas.height;
-                const tempCtx = tempCanvas.getContext("2d");
-
-                tempCtx.drawImage(imgPohjaHarja, 0, 0, canvas.width, canvas.height);
-                tempCtx.globalCompositeOperation = "source-in";
-                tempCtx.fillStyle = harjaVari;
-                tempCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.globalCompositeOperation = "source-over";
-                ctx.drawImage(tempCanvas, 0, 0);
-            }
-
-            // VAIHE 3: ÄÄRIVIIVAT
-            ctx.globalCompositeOperation = "source-over";
-            if (imgViiva) ctx.drawImage(imgViiva, 0, 0, canvas.width, canvas.height);
-            if (imgViivaHarja) ctx.drawImage(imgViivaHarja, 0, 0, canvas.width, canvas.height);
-            <button onclick="lataaKuvaLaitteelle()" style="background-color: #34c759; margin-top: 10px;">
-    Lataa kuva laitteelle (PNG);
-</button>
-
-        }
-        function lataaKuvaLaitteelle() {
-    const canvas = document.getElementById("canvas");
-
-    // Luodaan väliaikainen latauslinkki
-    const latausLinkki = document.createElement("a");
-    
-    // Asetetaan tiedoston nimi (esim. pentu-2026.png)
-    latausLinkki.download = "genetiikkapentu.png";
-
-    // Muunnetaan Canvas-sisältö data-URL-muotoon täydellä resoluutiolla
-    latausLinkki.href = canvas.toDataURL("image/png");
-
-    // Simuloidaan napin klikkausta selaimessa
-    document.body.appendChild(latausLinkki);
-    latausLinkki.click();
-    document.body.removeChild(latausLinkki);
-}
-
-    </script>
-</body>
-</html>
+                <label>N (Kuvio)</label>
+                <select id="isa_n"><option>NN</option><option selected>Nn</option><option>nn</option
  
