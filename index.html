@@ -332,7 +332,29 @@
             ctx.globalCompositeOperation = "source-over";
             if (imgViiva) ctx.drawImage(imgViiva, 0, 0, canvas.width, canvas.height);
             if (imgViivaHarja) ctx.drawImage(imgViivaHarja, 0, 0, canvas.width, canvas.height);
+            <button onclick="lataaKuvaLaitteelle()" style="background-color: #34c759; margin-top: 10px;">
+    Lataa kuva laitteelle (PNG);
+</button>
+
         }
+        function lataaKuvaLaitteelle() {
+    const canvas = document.getElementById("canvas");
+
+    // Luodaan väliaikainen latauslinkki
+    const latausLinkki = document.createElement("a");
+    
+    // Asetetaan tiedoston nimi (esim. pentu-2026.png)
+    latausLinkki.download = "genetiikkapentu.png";
+
+    // Muunnetaan Canvas-sisältö data-URL-muotoon täydellä resoluutiolla
+    latausLinkki.href = canvas.toDataURL("image/png");
+
+    // Simuloidaan napin klikkausta selaimessa
+    document.body.appendChild(latausLinkki);
+    latausLinkki.click();
+    document.body.removeChild(latausLinkki);
+}
+
     </script>
 </body>
 </html>
