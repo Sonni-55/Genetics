@@ -119,44 +119,47 @@
             let pentuM = luoGenotyyppi(isaM, emaM);
             let pentuC = luoGenotyyppi(isaC, emaC);
 
-            // 3. Määritä fenotyypit
-            let harja = pentuM.includes("M") ? "harja" : "harjatalon";
-            let kihara = (pentuC === "cc") ? "kiharallinen" : "kiharaton";
+            // 3. Määritä fenotyypit (onko harjaa / kiharaa)
+            let onkoHarja = pentuM.includes("M");
+            let onkoKihara = (pentuC === "cc");
 
-            // 4. Päivitä teksti
+            // 4. Valitaan oikea kuvatiedosto ehtojen perusteella
+            let kuvaTiedosto = "";
+
+            if (onkoHarja && onkoKihara) {
+                kuvaTiedosto = "Untitled309_20261008151613.png"; // Kihara harja
+            } else if (onkoHarja && !onkoKihara) {
+                kuvaTiedosto = "Untitled309_20261008151605.png"; // Ei kihara harja
+            } else if (!onkoHarja && onkoKihara) {
+                kuvaTiedosto = "Untitled309_20261008151142.png"; // Harjaton, kihara
+            } else {
+                kuvaTiedosto = "Untitled309_20261008151151.png"; // Harjaton, ei kihara
+            }
+
+            // 5. Päivitä teksti
+            let harjaTeksti = onkoHarja ? "Harja" : "Harjaton";
+            let kiharaTeksti = onkoKihara ? "Kiharallinen" : "Kiharaton";
+
             document.getElementById("tulos").innerText = 
-                `Genotyyppi: ${pentuM} / ${pentuC}\nFenotyyppi: ${harja}, ${kihara}`;
+                `Genotyyppi: ${pentuM} / ${pentuC}\nFenotyyppi: ${harjaTeksti}, ${kiharaTeksti}`;
 
-            // 5. Piirrä kuva Kankaalle (Canvas)
-            piirraKuvat(harja, kihara);
+            // 6. Piirrä valittu kuva kankaalle
+            piirraKuva(kuvaTiedosto);
         }
 
-        function piirraKuvat(harja, kihara) {
+        function piirraKuva(tiedostonimi) {
             const canvas = document.getElementById("canvas");
-            const ctx = canvas.getContext("ctx");
+            const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Tiedostopolut (varmista että kuvat ovat samassa kansiossa)
-            const kuvaPohja = new Image();
-            const kuvaM = new Image();
-            const kuvaC = new Image();
+            const kuva = new Image();
+            kuva.src = tiedostonimi;
 
-            kuvaPohja.src = "pohja.png";
-            kuvaM.src = `m_${harja}.png`;
-            kuvaC.src = `c_${kihara}.png`;
-
-            // Ladataan ja piirretään tasot järjestyksessä
-            kuvaPohja.onload = () => {
-                ctx.drawImage(kuvaPohja, 0, 0, canvas.width, canvas.height);
-                kuvaM.onload = () => {
-                    ctx.drawImage(kuvaM, 0, 0, canvas.width, canvas.height);
-                    kuvaC.onload = () => {
-                        ctx.drawImage(kuvaC, 0, 0, canvas.width, canvas.height);
-                    };
-                };
+            kuva.onload = () => {
+                ctx.drawImage(kuva, 0, 0, canvas.width, canvas.height);
             };
         }
     </script>
 </body>
 </html>
-
+ 
