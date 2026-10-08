@@ -1,1 +1,162 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genetiikkageneraattori</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 15px;
+            max-width: 400px;
+            margin: auto;
+            background-color: #f4f4f9;
+        }
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        label {
+            font-size: 14px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 4px;
+        }
+        select, button {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #007aff;
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        #canvas {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            background: #fff;
+            display: block;
+        }
+        .tulos {
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Vanhempien geenit</h2>
+        
+        <h3>Isä</h3>
+        <div class="grid">
+            <div>
+                <label>M-geeni</label>
+                <select id="isa_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
+            </div>
+            <div>
+                <label>C-geeni</label>
+                <select id="isa_c"><option>CC</option><option selected>Cc</option><option>cc</option></select>
+            </div>
+        </div>
+
+        <h3>Emä</h3>
+        <div class="grid">
+            <div>
+                <label>M-geeni</label>
+                <select id="ema_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
+            </div>
+            <div>
+                <label>C-geeni</label>
+                <select id="ema_c"><option>CC</option><option selected>Cc</option><option>cc</option></select>
+            </div>
+        </div>
+
+        <button onclick="arvoPentu()">Arvo pentu!</button>
+    </div>
+
+    <div class="card">
+        <canvas id="canvas" width="500" height="500"></canvas>
+        <div id="tulos" class="tulos">Valitse vanhemmat ja paina nappia.</div>
+    </div>
+
+    <script>
+        function arvoAlleeli(genotyyppi) {
+            return genotyyppi[Math.floor(Math.random() * 2)];
+        }
+
+        function luoGenotyyppi(g1, g2) {
+            let a1 = arvoAlleeli(g1);
+            let a2 = arvoAlleeli(g2);
+            return [a1, a2].sort().join("");
+        }
+
+        function arvoPentu() {
+            // 1. Lue valikot
+            let isaM = document.getElementById("isa_m").value;
+            let isaC = document.getElementById("isa_c").value;
+            let emaM = document.getElementById("ema_m").value;
+            let emaC = document.getElementById("ema_c").value;
+
+            // 2. Arvo genotyypit
+            let pentuM = luoGenotyyppi(isaM, emaM);
+            let pentuC = luoGenotyyppi(isaC, emaC);
+
+            // 3. Määritä fenotyypit
+            let harja = pentuM.includes("M") ? "harja" : "harjatalon";
+            let kihara = (pentuC === "cc") ? "kiharallinen" : "kiharaton";
+
+            // 4. Päivitä teksti
+            document.getElementById("tulos").innerText = 
+                `Genotyyppi: ${pentuM} / ${pentuC}\nFenotyyppi: ${harja}, ${kihara}`;
+
+            // 5. Piirrä kuva Kankaalle (Canvas)
+            piirraKuvat(harja, kihara);
+        }
+
+        function piirraKuvat(harja, kihara) {
+            const canvas = document.getElementById("canvas");
+            const ctx = canvas.getContext("ctx");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Tiedostopolut (varmista että kuvat ovat samassa kansiossa)
+            const kuvaPohja = new Image();
+            const kuvaM = new Image();
+            const kuvaC = new Image();
+
+            kuvaPohja.src = "pohja.png";
+            kuvaM.src = `m_${harja}.png`;
+            kuvaC.src = `c_${kihara}.png`;
+
+            // Ladataan ja piirretään tasot järjestyksessä
+            kuvaPohja.onload = () => {
+                ctx.drawImage(kuvaPohja, 0, 0, canvas.width, canvas.height);
+                kuvaM.onload = () => {
+                    ctx.drawImage(kuvaM, 0, 0, canvas.width, canvas.height);
+                    kuvaC.onload = () => {
+                        ctx.drawImage(kuvaC, 0, 0, canvas.width, canvas.height);
+                    };
+                };
+            };
+        }
+    </script>
+</body>
+</html>
 
