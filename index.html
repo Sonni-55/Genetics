@@ -344,48 +344,82 @@
                 lataaKuva(viivaHarja)
             ]);
 
-            // VAIHE 1: KEHO
-            if (imgPohja) {
-                ctx.globalCompositeOperation = "source-over";
-                ctx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
+            async function piirraErillinenHarjaPentu(
+    pohja, pohjaHarja, 
+    viiva, viivaHarja, 
+    kehoVari, laikkavari, harjaVari, 
+    valkoistenMaara
+) {
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                ctx.globalCompositeOperation = "source-in";
-                ctx.fillStyle = kehoVari;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Ladattavat kuvat
+    const [imgPohja, imgPohjaHarja, imgViiva, imgViivaHarja] = await Promise.all([
+        lataaKuva(pohja),
+        lataaKuva(pohjaHarja),
+        lataaKuva(viiva),
+        lataaKuva(viivaHarja),
+    ]);
 
-                if (laikkavari) {
-                    ctx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(ctx, canvas.width, canvas.height, laikkavari, 10);
-                }
-            }
+    // ==========================================
+    // VAIHE 1: KEHO (Pohjaväri + laikut + valkoinen)
+    // ==========================================
+    if (imgPohja) {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
 
-            // VAIHE 2: HARJA
-            if (imgPohjaHarja) {
-                const tempCanvas = document.createElement("canvas");
-                tempCanvas.width = canvas.width;
-                tempCanvas.height = canvas.height;
-                const tempCtx = tempCanvas.getContext("2d");
+        ctx.globalCompositeOperation = "source-in";
+        ctx.fillStyle = kehoVari;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                tempCtx.drawImage(imgPohjaHarja, 0, 0, canvas.width, canvas.height);
-                tempCtx.globalCompositeOperation = "source-in";
-                tempCtx.fillStyle = harjaVari;
-                tempCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.globalCompositeOperation = "source-over";
-                ctx.drawImage(tempCanvas, 0, 0);
-            }
-
-            // VAIHE 3: VALKOISET LAIKUT (S-GEENI)
-            if (valkoistenMaara > 0) {
-                ctx.globalCompositeOperation = "source-atop";
-                piirraCalicoLaikut(ctx, canvas.width, canvas.height, "#ffffff", valkoistenMaara);
-            }
-
-            // VAIHE 4: ÄÄRIVIIVAT
-            ctx.globalCompositeOperation = "source-over";
-            if (imgViiva) ctx.drawImage(imgViiva, 0, 0, canvas.width, canvas.height);
-            if (imgViivaHarja) ctx.drawImage(imgViivaHarja, 0, 0, canvas.width, canvas.height);
+        if (laikkavari) {
+            ctx.globalCompositeOperation = "source-atop";
+            piirraCalicoLaikut(ctx, canvas.width, canvas.height, laikkavari, 10);
         }
+
+        if (valkoistenMaara > 0) {
+            ctx.globalCompositeOperation = "source-atop";
+            piirraCalicoLaikut(ctx, canvas.width, canvas.height, "#ffffff", valkoistenMaara);
+        }
+    }
+
+    // ==========================================
+    // VAIHE 2: KEHON ÄÄRIVIIVAT
+    // ==========================================
+    // Piirretään kehon ääriviivat TÄSSÄ, ennen harjaa!
+    ctx.globalCompositeOperation = "source-over";
+    if (imgViiva) {
+        ctx.drawImage(imgViiva, 0, 0, canvas.width, canvas.height);
+    }
+
+    // ==========================================
+    // VAIHE 3: HARJAN POHJAVÄRI
+    // ==========================================
+    // Harjan pohjaväri piirretään kehon ääriviivojen PÄÄLLE.
+    if (imgPohjaHarja) {
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext("2d");
+
+        tempCtx.drawImage(imgPohjaHarja, 0, 0, canvas.width, canvas.height);
+        tempCtx.globalCompositeOperation = "source-in";
+        tempCtx.fillStyle = harjaVari;
+        tempCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.globalCompositeOperation = "source-over";
+        ctx.drawImage(tempCanvas, 0, 0);
+    }
+
+    // ==========================================
+    // VAIHE 4: HARJAN ÄÄRIVIIVAT
+    // ==========================================
+    if (imgViivaHarja) {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.drawImage(imgViivaHarja, 0, 0, canvas.width, canvas.height);
+    } 
+            
 
         function lataaKuvaLaitteelle() {
             const canvas = document.getElementById("canvas");
