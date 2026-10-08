@@ -8,7 +8,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 15px;
-            max-width: 400px;
+            max-width: 450px;
             margin: auto;
             background-color: #f4f4f9;
         }
@@ -21,30 +21,34 @@
         }
         .grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
         }
         label {
-            font-size: 14px;
+            font-size: 11px;
             font-weight: bold;
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
+            text-align: center;
         }
-        select, button {
+        select {
             width: 100%;
-            padding: 10px;
-            border-radius: 8px;
+            padding: 6px 2px;
+            border-radius: 6px;
             border: 1px solid #ccc;
-            font-size: 16px;
-            margin-bottom: 10px;
+            font-size: 13px;
         }
         button {
+            width: 100%;
             background-color: #007aff;
             color: white;
             font-weight: bold;
             border: none;
+            border-radius: 8px;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 12px;
+            padding: 12px;
+            font-size: 16px;
         }
         #canvas {
             width: 100%;
@@ -57,6 +61,8 @@
             margin-top: 10px;
             font-weight: bold;
             text-align: center;
+            font-size: 14px;
+            line-height: 1.4;
         }
     </style>
 </head>
@@ -68,24 +74,48 @@
         <h3>Isä</h3>
         <div class="grid">
             <div>
-                <label>M-geeni</label>
+                <label>M (Harja)</label>
                 <select id="isa_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
             </div>
             <div>
-                <label>C-geeni</label>
+                <label>C (Kihara)</label>
                 <select id="isa_c"><option>CC</option><option selected>Cc</option><option>cc</option></select>
+            </div>
+            <div>
+                <label>B (Tumma)</label>
+                <select id="isa_b"><option>BB</option><option selected>Bb</option><option>b1b1</option></select>
+            </div>
+            <div>
+                <label>O (Puna)</label>
+                <select id="isa_o"><option selected>OO</option><option>Oo</option><option>oo</option></select>
+            </div>
+            <div>
+                <label>N (Kuvio)</label>
+                <select id="isa_n"><option>NN</option><option selected>Nn</option><option>nn</option></select>
             </div>
         </div>
 
         <h3>Emä</h3>
         <div class="grid">
             <div>
-                <label>M-geeni</label>
+                <label>M (Harja)</label>
                 <select id="ema_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
             </div>
             <div>
-                <label>C-geeni</label>
+                <label>C (Kihara)</label>
                 <select id="ema_c"><option>CC</option><option selected>Cc</option><option>cc</option></select>
+            </div>
+            <div>
+                <label>B (Tumma)</label>
+                <select id="ema_b"><option>BB</option><option selected>Bb</option><option>b1b1</option></select>
+            </div>
+            <div>
+                <label>O (Puna)</label>
+                <select id="ema_o"><option selected>OO</option><option>Oo</option><option>oo</option></select>
+            </div>
+            <div>
+                <label>N (Kuvio)</label>
+                <select id="ema_n"><option>NN</option><option selected>Nn</option><option>nn</option></select>
             </div>
         </div>
 
@@ -93,14 +123,22 @@
     </div>
 
     <div class="card">
-        <!-- Resoluutio asetettu vastaamaan piirrospohjaa (2163 x 1361) -->
         <canvas id="canvas" width="2163" height="1361"></canvas>
         <div id="tulos" class="tulos">Valitse vanhemmat ja paina nappia.</div>
     </div>
 
     <script>
         function arvoAlleeli(genotyyppi) {
-            return genotyyppi[Math.floor(Math.random() * 2)];
+            // Huomioidaan 2-merkkiset alleelit kuten b1
+            let alleelit = [];
+            if (genotyyppi === "b1b1") alleelit = ["b1", "b1"];
+            else if (genotyyppi.includes("b1")) {
+                let muu = genotyyppi.replace("b1", "");
+                alleelit = [muu, "b1"];
+            } else {
+                alleelit = [genotyyppi[0], genotyyppi[1]];
+            }
+            return alleelit[Math.floor(Math.random() * 2)];
         }
 
         function luoGenotyyppi(g1, g2) {
@@ -109,54 +147,129 @@
             return [a1, a2].sort().join("");
         }
 
+        // HSL-sävyvaihtelufunktio
+        function varioiHSL(h, s, l) {
+            let dH = h + (Math.random() * 10 - 5); // Sävy +/- 5°
+            let dS = Math.max(0, Math.min(100, s + (Math.random() * 10 - 5))); // Kylläisyys +/- 5%
+            let dL = Math.max(0, Math.min(100, l + (Math.random() * 12 - 6))); // Valoisuus +/- 6%
+            return `hsl(${dH}, ${dS}%, ${dL}%)`;
+        }
+
+        // Generatiivisten Calico-laikkujen piirto
+        function piirraCalicoLaikut(ctx, width, height, vari, maara = 10) {
+            ctx.fillStyle = vari;
+            for (let i = 0; i < maara; i++) {
+                let keskiX = Math.random() * width;
+                let keskiY = Math.random() * height;
+                let ympyroita = 6 + Math.floor(Math.random() * 8);
+
+                ctx.beginPath();
+                for (let j = 0; j < ympyroita; j++) {
+                    let offsetX = (Math.random() - 0.5) * 180;
+                    let offsetY = (Math.random() - 0.5) * 180;
+                    let sade = 40 + Math.random() * 90;
+                    ctx.arc(keskiX + offsetX, keskiY + offsetY, sade, 0, Math.PI * 2);
+                }
+                ctx.fill();
+            }
+        }
+
         function arvoPentu() {
             // 1. Lue valikot
             let isaM = document.getElementById("isa_m").value;
             let isaC = document.getElementById("isa_c").value;
+            let isaB = document.getElementById("isa_b").value;
+            let isaO = document.getElementById("isa_o").value;
+            let isaN = document.getElementById("isa_n").value;
+
             let emaM = document.getElementById("ema_m").value;
             let emaC = document.getElementById("ema_c").value;
+            let emaB = document.getElementById("ema_b").value;
+            let emaO = document.getElementById("ema_o").value;
+            let emaN = document.getElementById("ema_n").value;
 
-            // 2. Arvo genotyypit
+            // 2. Arvo pennun genotyypit
             let pentuM = luoGenotyyppi(isaM, emaM);
             let pentuC = luoGenotyyppi(isaC, emaC);
+            let pentuB = luoGenotyyppi(isaB, emaB);
+            let pentuO = luoGenotyyppi(isaO, emaO);
+            let pentuN = luoGenotyyppi(isaN, emaN);
 
             // 3. Määritä fenotyypit
             let onkoHarja = pentuM.includes("M");
             let onkoKihara = (pentuC === "cc");
 
-            // 4. Määritetään POHJAKUVAT
+            // Määritetään tumma perusväri (B-geeni)
+            let tummaHSL, tummaNimi;
+            if (pentuB.includes("B")) {
+                tummaHSL = { h: 30, s: 5, l: 18 };
+                tummaNimi = "Musta";
+            } else if (pentuB.includes("b") && !pentuB.includes("b1b1")) {
+                tummaHSL = { h: 25, s: 40, l: 25 };
+                tummaNimi = "Ruskea";
+            } else {
+                tummaHSL = { h: 20, s: 50, l: 40 };
+                tummaNimi = "Kaneli";
+            }
+
+            // Määritetään punainen väri (O-geeni)
+            let punainenHSL, punainenNimi;
+            if (pentuO === "oo") {
+                punainenHSL = { h: 32, s: 60, l: 75 };
+                punainenNimi = "Kerma";
+            } else {
+                punainenHSL = { h: 20, s: 80, l: 50 };
+                punainenNimi = "Punainen";
+            }
+
+            // Arvotaan yksilölliset HSL-sävyt
+            let variTumma = varioiHSL(tummaHSL.h, tummaHSL.s, tummaHSL.l);
+            let variPunainen = varioiHSL(punainenHSL.h, punainenHSL.s, punainenHSL.l);
+
+            // N-geenin kuviointi
+            let variTyyppi = "";
+            let paavari = "";
+            let laikkavari = null;
+
+            if (pentuN === "NN") {
+                paavari = variTumma;
+                variTyyppi = tummaNimi;
+            } else if (pentuN === "nn") {
+                paavari = variPunainen;
+                variTyyppi = punainenNimi;
+            } else { // Nn = Calico
+                paavari = variPunainen;
+                laikkavari = variTumma;
+                variTyyppi = `Calico (${punainenNimi} + ${tummaNimi})`;
+            }
+
+            // 4. Kuvien määritys
             let pohjaTiedosto = onkoKihara 
-                ? "Untitled309_20261008151142.png"  // Kihara harjaton pohja
-                : "Untitled309_20261008151151.png"; // Ei kihara harjaton pohja
+                ? "Untitled309_20261008151142.png" 
+                : "Untitled309_20261008151151.png";
 
-            let pohjaHarjaTiedosto = null;
-            if (onkoHarja) {
-                pohjaHarjaTiedosto = onkoKihara 
-                    ? "Untitled309_20261008151613.png"  // Kihara harja pohja
-                    : "Untitled309_20261008151605.png"; // Ei kihara harja pohja
-            }
+            let pohjaHarjaTiedosto = onkoHarja 
+                ? (onkoKihara ? "Untitled309_20261008151613.png" : "Untitled309_20261008151605.png") 
+                : null;
 
-            // 5. Määritetään ÄÄRIVIIVAKUVAT
             let viivaTiedosto = onkoKihara 
-                ? "Untitled309_20261008153435.png"  // Kihara harjaton ääriviiva
-                : "Untitled309_20261008153442.png"; // Ei kihara harjaton ääriviiva
+                ? "Untitled309_20261008153435.png" 
+                : "Untitled309_20261008153442.png";
 
-            let viivaHarjaTiedosto = null;
-            if (onkoHarja) {
-                viivaHarjaTiedosto = onkoKihara 
-                    ? "Untitled309_20261008153420.png"  // Kihara harja ääriviiva
-                    : "Untitled309_20261008153429.png"; // Ei kihara harja ääriviiva
-            }
+            let viivaHarjaTiedosto = onkoHarja 
+                ? (onkoKihara ? "Untitled309_20261008153420.png" : "Untitled309_20261008153429.png") 
+                : null;
 
-            // 6. Päivitä teksti
+            // 5. Päivitä tulosteksti
             let harjaTeksti = onkoHarja ? "Harja" : "Harjaton";
             let kiharaTeksti = onkoKihara ? "Kiharallinen" : "Kiharaton";
 
             document.getElementById("tulos").innerText = 
-                `Genotyyppi: ${pentuM} / ${pentuC}\nFenotyyppi: ${harjaTeksti}, ${kiharaTeksti}`;
+                `Genotyyppi: ${pentuM} / ${pentuC} / ${pentuB} / ${pentuO} / ${pentuN}\n` +
+                `Fenotyyppi: ${harjaTeksti}, ${kiharaTeksti}\nVäri: ${variTyyppi}`;
 
-            // 7. Piirretään kaikki tasot oikeassa pinoamisjärjestyksessä
-            piirraKaikkiTasot(pohjaTiedosto, pohjaHarjaTiedosto, viivaTiedosto, viivaHarjaTiedosto);
+            // 6. Piirretään kuva kankaalle
+            piirraKokoPentu(pohjaTiedosto, pohjaHarjaTiedosto, viivaTiedosto, viivaHarjaTiedosto, paavari, laikkavari);
         }
 
         function lataaKuva(url) {
@@ -169,7 +282,7 @@
             });
         }
 
-        async function piirraKaikkiTasot(pohja, pohjaHarja, viiva, viivaHarja) {
+        async function piirraKokoPentu(pohja, pohjaHarja, viiva, viivaHarja, paavari, laikkavari) {
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -181,9 +294,24 @@
                 lataaKuva(viivaHarja)
             ]);
 
-            // Piirretään tasot täydessä 2163 x 1361 resoluutiossa
+            // VAIHE 1: Piirretään pohjamassat
+            ctx.globalCompositeOperation = "source-over";
             if (imgPohja) ctx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
             if (imgPohjaHarja) ctx.drawImage(imgPohjaHarja, 0, 0, canvas.width, canvas.height);
+
+            // VAIHE 2: Värjätään pääväri pohjamassojen päälle
+            ctx.globalCompositeOperation = "source-in";
+            ctx.fillStyle = paavari;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // VAIHE 3: Piirretään Calico-laikut jos kyseessä on Nn
+            if (laikkavari) {
+                ctx.globalCompositeOperation = "source-atop";
+                piirraCalicoLaikut(ctx, canvas.width, canvas.height, laikkavari, 10);
+            }
+
+            // VAIHE 4: Ääriviivat päällimmäiseksi
+            ctx.globalCompositeOperation = "source-over";
             if (imgViiva) ctx.drawImage(imgViiva, 0, 0, canvas.width, canvas.height);
             if (imgViivaHarja) ctx.drawImage(imgViivaHarja, 0, 0, canvas.width, canvas.height);
         }
