@@ -8,7 +8,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 15px;
-            max-width: 500px;
+            max-width: 520px;
             margin: auto;
             background-color: #f4f4f9;
         }
@@ -21,7 +21,7 @@
         }
         .grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(7, 1fr);
             gap: 4px;
         }
         label {
@@ -82,10 +82,9 @@
                 <select id="isa_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
             </div>
             <div>
-    <label>S (Valkoinen)</label>
-    <select id="isa_s"><option>SS</option><option selected>Ss</option><option>ss</option></select>
-</div>
-
+                <label>S (Valkoinen)</label>
+                <select id="isa_s"><option>SS</option><option selected>Ss</option><option>ss</option></select>
+            </div>
             <div>
                 <label>C (Kihara)</label>
                 <select id="isa_c"><option>CC</option><option selected>Cc</option><option>cc</option></select>
@@ -122,10 +121,10 @@
                 <select id="ema_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
             </div>
             <div>
-    <label>S (Valkoinen)</label>
-    <select id="isa_s"><option>SS</option><option selected>Ss</option><option>ss</option></select>
-</div>
-
+                <label>S (Valkoinen)</label>
+                <!-- KORJATTU: id="ema_s" -->
+                <select id="ema_s"><option>SS</option><option selected>Ss</option><option>ss</option></select>
+            </div>
             <div>
                 <label>C (Kihara)</label>
                 <select id="ema_c"><option>CC</option><option selected>Cc</option><option>cc</option></select>
@@ -165,7 +164,6 @@
     </div>
 
     <script>
-        // Arvotaan yksi alleeli vanhemman genotyypistä
         function arvoAlleeli(genotyyppi) {
             let alleelit = [];
             if (genotyyppi === "BB") alleelit = ["B", "B"];
@@ -179,13 +177,11 @@
             return alleelit[Math.floor(Math.random() * 2)];
         }
 
-        // Luo ja järjestää genotyypin oikeaan järjestykseen (esim. B > b > b1)
         function luoGenotyyppi(g1, g2, onkoBGeeni = false) {
             let a1 = arvoAlleeli(g1);
             let a2 = arvoAlleeli(g2);
 
             if (onkoBGeeni) {
-                // Dominanssipainot B-geenille
                 const arvo = (a) => (a === "B" ? 3 : a === "b" ? 2 : 1);
                 let lista = [a1, a2].sort((a, b) => arvo(b) - arvo(a));
                 return lista.join("");
@@ -220,8 +216,9 @@
         }
 
         function arvoPentu() {
-            // 1. Lue valikot
+            // 1. Lue valikot (mukaan lukien S-geeni)
             let isaM = document.getElementById("isa_m").value;
+            let isaS = document.getElementById("isa_s").value;
             let isaC = document.getElementById("isa_c").value;
             let isaB = document.getElementById("isa_b").value;
             let isaH = document.getElementById("isa_h").value;
@@ -229,6 +226,7 @@
             let isaN = document.getElementById("isa_n").value;
 
             let emaM = document.getElementById("ema_m").value;
+            let emaS = document.getElementById("ema_s").value;
             let emaC = document.getElementById("ema_c").value;
             let emaB = document.getElementById("ema_b").value;
             let emaH = document.getElementById("ema_h").value;
@@ -237,17 +235,22 @@
 
             // 2. Arvo pennun genotyypit
             let pentuM = luoGenotyyppi(isaM, emaM);
+            let pentuS = luoGenotyyppi(isaS, emaS);
             let pentuC = luoGenotyyppi(isaC, emaC);
-            let pentuB = luoGenotyyppi(isaB, emaB, true); // true = B-geeni
+            let pentuB = luoGenotyyppi(isaB, emaB, true);
             let pentuH = luoGenotyyppi(isaH, emaH);
             let pentuO = luoGenotyyppi(isaO, emaO);
             let pentuN = luoGenotyyppi(isaN, emaN);
+
+            // Valkoisten laikkujen määrä
+            let valkoistenMaara = 0;
+            if (pentuS === "SS") valkoistenMaara = 18;
+            else if (pentuS.includes("S")) valkoistenMaara = 6;
 
             // 3. Määritä fenotyypit
             let onkoHarja = pentuM.includes("M");
             let onkoKihara = (pentuC === "cc");
 
-            // B-geenin fenotyypin määritys dominanssijärjestyksessä (B > b > b1)
             let tummaHSL, tummaNimi;
             if (pentuB.includes("B")) {
                 tummaHSL = { h: 30, s: 5, l: 18 };
@@ -260,7 +263,6 @@
                 tummaNimi = "Kaneli";
             }
 
-            // Harjan väri (H-geeni)
             let harjaHSL, harjaNimi;
             if (pentuH.includes("H") && pentuH.includes("h")) {
                 harjaHSL = { h: 25, s: 35, l: 25 };
@@ -273,7 +275,6 @@
                 harjaNimi = "Vaalea harja";
             }
 
-            // O-geeni
             let punainenHSL = (pentuO === "oo") 
                 ? { h: 32, s: 60, l: 75 } 
                 : { h: 20, s: 80, l: 50 };
@@ -291,16 +292,6 @@
                 paavari = variPunainen;
                 laikkavari = variTumma;
             }
-            // Arvotaan pennun S-geeni
-let pentuS = luoGenotyyppi(isaS, emaS);
-
-// Määritetään valkoisten laikkujen määrä
-let valkoistenMaara = 0;
-if (pentuS === "SS") {
-    valkoistenMaara = 18; // Paljon valkoista
-} else if (pentuS.includes("S")) {
-    valkoistenMaara = 6;  // Vähän valkoista (Ss)
-}
 
             // 4. Kuvatiedostot
             let pohjaTiedosto = onkoKihara 
@@ -323,11 +314,11 @@ if (pentuS === "SS") {
             let harjaTeksti = onkoHarja ? `Harja (${harjaNimi})` : "Ei harjaa";
 
             document.getElementById("tulos").innerText = 
-                `Genotyyppi: ${pentuM} / ${pentuC} / ${pentuB} / ${pentuH} / ${pentuO} / ${pentuN}\n` +
-                `Ominaisuudet: ${harjaTeksti}, Kehon tumma sävy: ${tummaNimi}`;
+                `Genotyyppi: ${pentuM} / ${pentuS} / ${pentuC} / ${pentuB} / ${pentuH} / ${pentuO} / ${pentuN}\n` +
+                `Ominaisuudet: ${harjaTeksti}, Keho: ${tummaNimi}`;
 
-            // 6. Piirto
-            piirraErillinenHarjaPentu(pohjaTiedosto, pohjaHarjaTiedosto, viivaTiedosto, viivaHarjaTiedosto, paavari, laikkavari, variHarja);
+            // 6. Piirto (KORJATTU: mukana valkoistenMaara)
+            piirraErillinenHarjaPentu(pohjaTiedosto, pohjaHarjaTiedosto, viivaTiedosto, viivaHarjaTiedosto, paavari, laikkavari, variHarja, valkoistenMaara);
         }
 
         function lataaKuva(url) {
@@ -340,7 +331,8 @@ if (pentuS === "SS") {
             });
         }
 
-        async function piirraErillinenHarjaPentu(pohja, pohjaHarja, viiva, viivaHarja, kehoVari, laikkavari, harjaVari) {
+        // KORJATTU: Puhtaan selkeä ja yksittäinen piirtofunktio
+        async function piirraErillinenHarjaPentu(pohja, pohjaHarja, viiva, viivaHarja, kehoVari, laikkavari, harjaVari, valkoistenMaara) {
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -352,63 +344,48 @@ if (pentuS === "SS") {
                 lataaKuva(viivaHarja)
             ]);
 
-            async function piirraErillinenHarjaPentu(pohja, pohjaHarja, viiva, viivaHarja, kehoVari, laikkavari, harjaVari, valkoistenMaara) {
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // VAIHE 1: KEHO
+            if (imgPohja) {
+                ctx.globalCompositeOperation = "source-over";
+                ctx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
 
-    const [imgPohja, imgPohjaHarja, imgViiva, imgViivaHarja] = await Promise.all([
-        lataaKuva(pohja),
-        lataaKuva(pohjaHarja),
-        lataaKuva(viiva),
-        lataaKuva(viivaHarja)
-    ]);
+                ctx.globalCompositeOperation = "source-in";
+                ctx.fillStyle = kehoVari;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // VAIHE 1: KEHO
-    if (imgPohja) {
-        ctx.globalCompositeOperation = "source-over";
-        ctx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
+                if (laikkavari) {
+                    ctx.globalCompositeOperation = "source-atop";
+                    piirraCalicoLaikut(ctx, canvas.width, canvas.height, laikkavari, 10);
+                }
+            }
 
-        ctx.globalCompositeOperation = "source-in";
-        ctx.fillStyle = kehoVari;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // VAIHE 2: HARJA
+            if (imgPohjaHarja) {
+                const tempCanvas = document.createElement("canvas");
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                const tempCtx = tempCanvas.getContext("2d");
 
-        if (laikkavari) {
-            ctx.globalCompositeOperation = "source-atop";
-            piirraCalicoLaikut(ctx, canvas.width, canvas.height, laikkavari, 10);
+                tempCtx.drawImage(imgPohjaHarja, 0, 0, canvas.width, canvas.height);
+                tempCtx.globalCompositeOperation = "source-in";
+                tempCtx.fillStyle = harjaVari;
+                tempCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.globalCompositeOperation = "source-over";
+                ctx.drawImage(tempCanvas, 0, 0);
+            }
+
+            // VAIHE 3: VALKOISET LAIKUT (S-GEENI)
+            if (valkoistenMaara > 0) {
+                ctx.globalCompositeOperation = "source-atop";
+                piirraCalicoLaikut(ctx, canvas.width, canvas.height, "#ffffff", valkoistenMaara);
+            }
+
+            // VAIHE 4: ÄÄRIVIIVAT
+            ctx.globalCompositeOperation = "source-over";
+            if (imgViiva) ctx.drawImage(imgViiva, 0, 0, canvas.width, canvas.height);
+            if (imgViivaHarja) ctx.drawImage(imgViivaHarja, 0, 0, canvas.width, canvas.height);
         }
-    }
-
-    // VAIHE 2: HARJA
-    if (imgPohjaHarja) {
-        const tempCanvas = document.createElement("canvas");
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
-        const tempCtx = tempCanvas.getContext("2d");
-
-        tempCtx.drawImage(imgPohjaHarja, 0, 0, canvas.width, canvas.height);
-        tempCtx.globalCompositeOperation = "source-in";
-        tempCtx.fillStyle = harjaVari;
-        tempCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.globalCompositeOperation = "source-over";
-        ctx.drawImage(tempCanvas, 0, 0);
-    }
-
-    // VAIHE 3: VALKOISET LAIKUT (S-GEENI)
-    // Piirretään valkoiset laikut kehon ja harjan päälle rajattuna
-    if (valkoistenMaara > 0) {
-        ctx.globalCompositeOperation = "source-atop";
-        // Käytetään laikkufunktiota puhtaan valkoisella värillä (#ffffff)
-        piirraCalicoLaikut(ctx, canvas.width, canvas.height, "#ffffff", valkoistenMaara);
-    }
-
-    // VAIHE 4: ÄÄRIVIIVAT
-    ctx.globalCompositeOperation = "source-over";
-    if (imgViiva) ctx.drawImage(imgViiva, 0, 0, canvas.width, canvas.height);
-    if (imgViivaHarja) ctx.drawImage(imgViivaHarja, 0, 0, canvas.width, canvas.height);
-}
- 
 
         function lataaKuvaLaitteelle() {
             const canvas = document.getElementById("canvas");
@@ -423,3 +400,4 @@ if (pentuS === "SS") {
 </body>
 </html>
  
+            
