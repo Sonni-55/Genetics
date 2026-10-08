@@ -195,24 +195,41 @@
             let dL = Math.max(0, Math.min(100, l + (Math.random() * 12 - 6)));
             return `hsl(${dH}, ${dS}%, ${dL}%)`;
         }
+function piirraCalicoLaikut(ctx, width, height, vari, maara = 10) {
+    ctx.fillStyle = vari;
 
-        function piirraCalicoLaikut(ctx, width, height, vari, maara = 10) {
-            ctx.fillStyle = vari;
-            for (let i = 0; i < maara; i++) {
-                let keskiX = Math.random() * width;
-                let keskiY = Math.random() * height;
-                let ympyroita = 6 + Math.floor(Math.random() * 8);
+    for (let i = 0; i < maara; i++) {
+        // Laikun keskipiste
+        let keskiX = Math.random() * width;
+        let keskiY = Math.random() * height;
+        
+        // Pääsäde määrittää laikun yleiskoon
+        let perussade = 50 + Math.random() * 80; 
+        
+        // Kulmapisteiden määrä (mitä enemmän pisteitä, sitä sulavampi epätasaisuus)
+        let pisteita = 12 + Math.floor(Math.random() * 8);
 
-                ctx.beginPath();
-                for (let j = 0; j < ympyroita; j++) {
-                    let offsetX = (Math.random() - 0.5) * 180;
-                    let offsetY = (Math.random() - 0.5) * 180;
-                    let sade = 40 + Math.random() * 90;
-                    ctx.arc(keskiX + offsetX, keskiY + offsetY, sade, 0, Math.PI * 2);
-                }
-                ctx.fill();
+        ctx.beginPath();
+        for (let j = 0; j < pisteita; j++) {
+            // Jaetaan ympyrä tasan kulmapisteiden kesken
+            let kulma = (j / pisteita) * Math.PI * 2;
+            
+            // Vaihdellaan sädettä jokaisen kulmapisteen kohdalla (orgaaninen epätasaisuus)
+            let sädevaihtelu = perussade * (0.6 + Math.random() * 0.8);
+            
+            let x = keskiX + Math.cos(kulma) * sädevaihtelu;
+            let y = keskiY + Math.sin(kulma) * sädevaihtelu;
+
+            if (j === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
             }
         }
+        ctx.closePath();
+        ctx.fill();
+    }
+}
 
         function arvoPentu() {
             // 1. Lue valikot
