@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
@@ -195,41 +195,48 @@
             let dL = Math.max(0, Math.min(100, l + (Math.random() * 12 - 6)));
             return `hsl(${dH}, ${dS}%, ${dL}%)`;
         }
-function piirraCalicoLaikut(ctx, width, height, vari, maara = 10) {
-    ctx.fillStyle = vari;
 
-    for (let i = 0; i < maara; i++) {
-        // Laikun keskipiste
-        let keskiX = Math.random() * width;
-        let keskiY = Math.random() * height;
-        
-        // Pääsäde määrittää laikun yleiskoon
-        let perussade = 50 + Math.random() * 80; 
-        
-        // Kulmapisteiden määrä (mitä enemmän pisteitä, sitä sulavampi epätasaisuus)
-        let pisteita = 12 + Math.floor(Math.random() * 8);
+        // KORJATTU: Pehmeämmät, kaartuvat laikut Bezier-käyrillä
+        function piirraCalicoLaikut(ctx, width, height, vari, maara = 10) {
+            ctx.fillStyle = vari;
 
-        ctx.beginPath();
-        for (let j = 0; j < pisteita; j++) {
-            // Jaetaan ympyrä tasan kulmapisteiden kesken
-            let kulma = (j / pisteita) * Math.PI * 2;
-            
-            // Vaihdellaan sädettä jokaisen kulmapisteen kohdalla (orgaaninen epätasaisuus)
-            let sädevaihtelu = perussade * (0.6 + Math.random() * 0.8);
-            
-            let x = keskiX + Math.cos(kulma) * sädevaihtelu;
-            let y = keskiY + Math.sin(kulma) * sädevaihtelu;
+            for (let i = 0; i < maara; i++) {
+                let keskiX = Math.random() * width;
+                let keskiY = Math.random() * height;
+                let perussade = 50 + Math.random() * 80; 
+                let pisteita = 8 + Math.floor(Math.random() * 6);
 
-            if (j === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
+                // Generoidaan pisteet säteineen
+                let pisteet = [];
+                for (let j = 0; j < pisteita; j++) {
+                    let kulma = (j / pisteita) * Math.PI * 2;
+                    let sädevaihtelu = perussade * (0.6 + Math.random() * 0.8);
+                    pisteet.push({
+                        x: keskiX + Math.cos(kulma) * sädevaihtelu,
+                        y: keskiY + Math.sin(kulma) * sädevaihtelu
+                    });
+                }
+
+                ctx.beginPath();
+                // Aloitetaan ensimmäisen ja viimeisen pisteen keskivälistä
+                let alkukeksiX = (pisteet[0].x + pisteet[pisteita - 1].x) / 2;
+                let alkukeksiY = (pisteet[0].y + pisteet[pisteita - 1].y) / 2;
+                ctx.moveTo(alkukeksiX, alkukeksiY);
+
+                // Piirretään pehmeät kaaret pisteiden välille
+                for (let j = 0; j < pisteita; j++) {
+                    let nykyinen = pisteet[j];
+                    let seuraava = pisteet[(j + 1) % pisteita];
+                    let keskiSeuraavaX = (nykyinen.x + seuraava.x) / 2;
+                    let keskiSeuraavaY = (nykyinen.y + seuraava.y) / 2;
+
+                    ctx.quadraticCurveTo(nykyinen.x, nykyinen.y, keskiSeuraavaX, keskiSeuraavaY);
+                }
+
+                ctx.closePath();
+                ctx.fill();
             }
         }
-        ctx.closePath();
-        ctx.fill();
-    }
-}
 
         function arvoPentu() {
             // 1. Lue valikot
@@ -268,7 +275,6 @@ function piirraCalicoLaikut(ctx, width, height, vari, maara = 10) {
             let onkoKihara = (pentuC === "cc");
 
             let tummaHSL, tummaNimi;
-            // KORJATTU: B-geenin tarkastus siten, että 'b1' ei mene sekaisin tavallisen 'b':n kanssa
             if (pentuB.includes("B")) {
                 tummaHSL = { h: 30, s: 5, l: 18 };
                 tummaNimi = "Musta";
@@ -310,10 +316,10 @@ function piirraCalicoLaikut(ctx, width, height, vari, maara = 10) {
                 laikkavari = variTumma;
             }
 
-            // 4. Kuvatiedostot
+            // 4. Kuvatiedostot (PÄIVITETTY UUDET HARJATTOMAT POHJAT)
             let pohjaTiedosto = onkoKihara 
-                ? "Untitled309_20261008151142.png" 
-                : "Untitled309_20261008151151.png";
+                ? "Untitled309_20261008214953.png" 
+                : "Untitled309_20261008214944.png";
 
             let pohjaHarjaTiedosto = onkoHarja 
                 ? (onkoKihara ? "Untitled309_20261008151613.png" : "Untitled309_20261008151605.png") 
@@ -348,13 +354,11 @@ function piirraCalicoLaikut(ctx, width, height, vari, maara = 10) {
             });
         }
 
-        // KORJATTU: Piirtofunktio oikealla kihtijärjestyksellä
         async function piirraErillinenHarjaPentu(pohja, pohjaHarja, viiva, viivaHarja, kehoVari, laikkavari, harjaVari, valkoistenMaara) {
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Ladattavat kuvat
             const [imgPohja, imgPohjaHarja, imgViiva, imgViivaHarja] = await Promise.all([
                 lataaKuva(pohja),
                 lataaKuva(pohjaHarja),
@@ -414,7 +418,7 @@ function piirraCalicoLaikut(ctx, width, height, vari, maara = 10) {
         function lataaKuvaLaitteelle() {
             const canvas = document.getElementById("canvas");
             const latausLinkki = document.createElement("a");
-            latausLinkki.download = "genetiikkapentu.png";
+            latausLinkki.download = "geneticadopt.png";
             latausLinkki.href = canvas.toDataURL("image/png");
             document.body.appendChild(latausLinkki);
             latausLinkki.click();
@@ -423,3 +427,4 @@ function piirraCalicoLaikut(ctx, width, height, vari, maara = 10) {
     </script>
 </body>
 </html>
+ 
