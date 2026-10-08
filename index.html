@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
@@ -196,7 +196,6 @@
             return `hsl(${dH}, ${dS}%, ${dL}%)`;
         }
 
-        // KORJATTU: Pehmeämmät, kaartuvat laikut Bezier-käyrillä
         function piirraCalicoLaikut(ctx, width, height, vari, maara = 10) {
             ctx.fillStyle = vari;
 
@@ -206,7 +205,6 @@
                 let perussade = 50 + Math.random() * 80; 
                 let pisteita = 8 + Math.floor(Math.random() * 6);
 
-                // Generoidaan pisteet säteineen
                 let pisteet = [];
                 for (let j = 0; j < pisteita; j++) {
                     let kulma = (j / pisteita) * Math.PI * 2;
@@ -218,12 +216,10 @@
                 }
 
                 ctx.beginPath();
-                // Aloitetaan ensimmäisen ja viimeisen pisteen keskivälistä
                 let alkukeksiX = (pisteet[0].x + pisteet[pisteita - 1].x) / 2;
                 let alkukeksiY = (pisteet[0].y + pisteet[pisteita - 1].y) / 2;
                 ctx.moveTo(alkukeksiX, alkukeksiY);
 
-                // Piirretään pehmeät kaaret pisteiden välille
                 for (let j = 0; j < pisteita; j++) {
                     let nykyinen = pisteet[j];
                     let seuraava = pisteet[(j + 1) % pisteita];
@@ -308,15 +304,28 @@
 
             let paavari = "";
             let laikkavari = null;
+            let kehoTeksti = "";
 
-            if (pentuN === "NN") paavari = variTumma;
-            else if (pentuN === "nn") paavari = variPunainen;
-            else {
+            // N-geenin käsittely (NN = Tumma, nn = Punainen, Nn/nN = Kilpikonna)
+            if (pentuN === "NN") {
+                paavari = variTumma;
+                kehoTeksti = tummaNimi;
+            } else if (pentuN === "nn") {
                 paavari = variPunainen;
-                laikkavari = variTumma;
+                kehoTeksti = "Punainen";
+            } else {
+                // Kilpikonna: arvotaan kumpiko väri on pohjalla ja kumpiko täplinä
+                if (Math.random() < 0.5) {
+                    paavari = variPunainen;
+                    laikkavari = variTumma;
+                } else {
+                    paavari = variTumma;
+                    laikkavari = variPunainen;
+                }
+                kehoTeksti = `Kilpikonnakuvio (${tummaNimi} / Punainen)`;
             }
 
-            // 4. Kuvatiedostot (PÄIVITETTY UUDET HARJATTOMAT POHJAT)
+            // 4. Kuvatiedostot
             let pohjaTiedosto = onkoKihara 
                 ? "Untitled309_20261008214953.png" 
                 : "Untitled309_20261008214944.png";
@@ -338,7 +347,7 @@
 
             document.getElementById("tulos").innerText = 
                 `Genotyyppi: ${pentuM} / ${pentuS} / ${pentuC} / ${pentuB} / ${pentuH} / ${pentuO} / ${pentuN}\n` +
-                `Ominaisuudet: ${harjaTeksti}, Keho: ${tummaNimi}`;
+                `Ominaisuudet: ${harjaTeksti}, Keho: ${kehoTeksti}`;
 
             // 6. Piirto
             piirraErillinenHarjaPentu(pohjaTiedosto, pohjaHarjaTiedosto, viivaTiedosto, viivaHarjaTiedosto, paavari, laikkavari, variHarja, valkoistenMaara);
@@ -427,4 +436,3 @@
     </script>
 </body>
 </html>
- 
