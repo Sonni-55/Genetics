@@ -154,6 +154,14 @@
                 <label>G (Grad.)</label>
                 <select id="isa_g"><option>GG</option><option selected>Gg</option><option>gg</option></select>
             </div>
+            <div>
+                <label>Nose (Nenä)</label>
+                <select id="isa_nose">
+                    <option value="smooth" selected>Smooth</option>
+                    <option value="big">Big</option>
+                    <option value="sharp">Sharp</option>
+                </select>
+            </div>
         </div>
 
         <h3>Emä</h3>
@@ -201,6 +209,14 @@
                 <label>G (Grad.)</label>
                 <select id="ema_g"><option>GG</option><option selected>Gg</option><option>gg</option></select>
             </div>
+            <div>
+                <label>Nose (Nenä)</label>
+                <select id="ema_nose">
+                    <option value="smooth" selected>Smooth</option>
+                    <option value="big">Big</option>
+                    <option value="sharp">Sharp</option>
+                </select>
+            </div>
         </div>
 
         <h3>Silmien värit</h3>
@@ -217,6 +233,24 @@
                 <div class="color-input-group">
                     <input type="color" id="ema_eyes" value="#D2691E">
                     <input type="text" id="ema_eyes_hex" value="#D2691E" placeholder="#RRGGBB">
+                </div>
+            </div>
+        </div>
+
+        <h3>Nahkan värit</h3>
+        <div class="grid-2">
+            <div>
+                <label>Isän nahkan väri</label>
+                <div class="color-input-group">
+                    <input type="color" id="isa_skin" value="#FFB6C1">
+                    <input type="text" id="isa_skin_hex" value="#FFB6C1" placeholder="#RRGGBB">
+                </div>
+            </div>
+            <div>
+                <label>Emän nahkan väri</label>
+                <div class="color-input-group">
+                    <input type="color" id="ema_skin" value="#DDA0DD">
+                    <input type="text" id="ema_skin_hex" value="#DDA0DD" placeholder="#RRGGBB">
                 </div>
             </div>
         </div>
@@ -240,6 +274,22 @@
             "Untitled309_20261008221015.png"
         ];
 
+        // Nose data
+        const noseData = {
+            smooth: {
+                lineart: "Untitled309_20261008153420.png",
+                color: "Untitled309_20261008153420.png"
+            },
+            big: {
+                lineart: "Untitled309_20261008153420.png",
+                color: "Untitled309_20261008153420.png"
+            },
+            sharp: {
+                lineart: "Untitled309_20261008153420.png",
+                color: "Untitled309_20261008153420.png"
+            }
+        };
+
         // Color sync functionality
         document.getElementById("isa_eyes").addEventListener("input", (e) => {
             document.getElementById("isa_eyes_hex").value = e.target.value.toUpperCase();
@@ -256,6 +306,24 @@
         document.getElementById("ema_eyes_hex").addEventListener("input", (e) => {
             if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
                 document.getElementById("ema_eyes").value = e.target.value;
+            }
+        });
+
+        document.getElementById("isa_skin").addEventListener("input", (e) => {
+            document.getElementById("isa_skin_hex").value = e.target.value.toUpperCase();
+        });
+        document.getElementById("isa_skin_hex").addEventListener("input", (e) => {
+            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                document.getElementById("isa_skin").value = e.target.value;
+            }
+        });
+
+        document.getElementById("ema_skin").addEventListener("input", (e) => {
+            document.getElementById("ema_skin_hex").value = e.target.value.toUpperCase();
+        });
+        document.getElementById("ema_skin_hex").addEventListener("input", (e) => {
+            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                document.getElementById("ema_skin").value = e.target.value;
             }
         });
 
@@ -282,6 +350,18 @@
             const blendedG = Math.round((rgb1.g + rgb2.g) / 2);
             const blendedB = Math.round((rgb1.b + rgb2.b) / 2);
             return rgbToHex(blendedR, blendedG, blendedB);
+        }
+
+        function randomizeColor(color1, color2) {
+            // Randomly choose one of the parent colors or a blend
+            const rand = Math.random();
+            if (rand < 0.35) {
+                return color1;
+            } else if (rand < 0.7) {
+                return color2;
+            } else {
+                return blendColors(color1, color2);
+            }
         }
 
         function getRandomEyeLineart() {
@@ -425,6 +505,7 @@
             let isaN = document.getElementById("isa_n").value;
             let isaT = document.getElementById("isa_t").value;
             let isaG = document.getElementById("isa_g").value;
+            let isaNose = document.getElementById("isa_nose").value;
 
             let emaM = document.getElementById("ema_m").value;
             let emaS = document.getElementById("ema_s").value;
@@ -435,12 +516,21 @@
             let emaN = document.getElementById("ema_n").value;
             let emaT = document.getElementById("ema_t").value;
             let emaG = document.getElementById("ema_g").value;
+            let emaNose = document.getElementById("ema_nose").value;
 
-            // Eye colors
+            // Eye colors - now randomized
             let isaEyeColor = document.getElementById("isa_eyes").value.toUpperCase();
             let emaEyeColor = document.getElementById("ema_eyes").value.toUpperCase();
-            let pentuEyeColor = blendColors(isaEyeColor, emaEyeColor);
+            let pentuEyeColor = randomizeColor(isaEyeColor, emaEyeColor);
             let selectedEyeLineart = getRandomEyeLineart();
+
+            // Skin colors - now randomized
+            let isaSkinColor = document.getElementById("isa_skin").value.toUpperCase();
+            let emaSkinColor = document.getElementById("ema_skin").value.toUpperCase();
+            let pentuSkinColor = randomizeColor(isaSkinColor, emaSkinColor);
+
+            // Nose - 50/50 inheritance
+            let pentuNose = Math.random() < 0.5 ? isaNose : emaNose;
 
             // 2. Arvo pennun genotyypit
             let pentuM = luoGenotyyppi(isaM, emaM);
@@ -548,16 +638,33 @@
                 ? (onkoKihara ? "Untitled309_20261008153420.png" : "Untitled309_20261008153429.png") 
                 : null;
 
+            // Nose files based on inherited nose type
+            let noseSkinTiedosto = "";
+            let noseViivaaTiedosto = "";
+            
+            if (pentuNose === "smooth") {
+                noseSkinTiedosto = "Untitled309_20261008215650.png";
+                noseViivaaTiedosto = "Untitled309_20261008215450.png";
+            } else if (pentuNose === "big") {
+                noseSkinTiedosto = "Untitled309_20261008220505.png";
+                noseViivaaTiedosto = "Untitled309_20261008220001.png";
+            } else if (pentuNose === "sharp") {
+                noseSkinTiedosto = "Untitled309_20261008221116.png";
+                noseViivaaTiedosto = "Untitled309_20261008221011.png";
+            }
+
             // 5. Tekstit
             let harjaTeksti = onkoHarja ? `Harja (${harjaNimi})` : "Ei harjaa";
 
             document.getElementById("tulos").innerText = 
                 `Genotyyppi: ${pentuM} / ${pentuS} / ${pentuC} / ${pentuB} / ${pentuH} / ${pentuO} / ${pentuN} / ${pentuT} / ${pentuG}\n` +
                 `Silmien väri: ${pentuEyeColor}\n` +
+                `Nahkan väri: ${pentuSkinColor}\n` +
+                `Nenä: ${pentuNose}\n` +
                 `Ominaisuudet: ${harjaTeksti}, Keho: ${kehoTeksti}`;
 
             // 6. Piirto
-            piirraErillinenHarjaPentu(pohjaTiedosto, pohjaHarjaTiedosto, viivaTiedosto, viivaHarjaTiedosto, paavari, laikkavari, variHarja, valkoistenMaara, onkoBrindle, onkoGradient, pentuEyeColor, selectedEyeLineart);
+            piirraErillinenHarjaPentu(pohjaTiedosto, pohjaHarjaTiedosto, viivaTiedosto, viivaHarjaTiedosto, paavari, laikkavari, variHarja, valkoistenMaara, onkoBrindle, onkoGradient, pentuEyeColor, selectedEyeLineart, pentuSkinColor, noseSkinTiedosto, noseViivaaTiedosto);
         }
 
         function lataaKuva(url) {
@@ -570,18 +677,20 @@
             });
         }
 
-        async function piirraErillinenHarjaPentu(pohja, pohjaHarja, viiva, viivaHarja, kehoVari, laikkavari, harjaVari, valkoistenMaara, onkoBrindle, onkoGradient, eyeColor, eyeLineart) {
+        async function piirraErillinenHarjaPentu(pohja, pohjaHarja, viiva, viivaHarja, kehoVari, laikkavari, harjaVari, valkoistenMaara, onkoBrindle, onkoGradient, eyeColor, eyeLineart, skinColor, noseSkin, noseViiva) {
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const [imgPohja, imgPohjaHarja, imgViiva, imgViivaHarja, imgSilmät, imgSilmätLineArt] = await Promise.all([
+            const [imgPohja, imgPohjaHarja, imgViiva, imgViivaHarja, imgSilmät, imgSilmätLineArt, imgNoseSkin, imgNoseViiva] = await Promise.all([
                 lataaKuva(pohja),
                 lataaKuva(pohjaHarja),
                 lataaKuva(viiva),
                 lataaKuva(viivaHarja),
                 lataaKuva("Untitled309_20261008221009.png"),
-                lataaKuva(eyeLineart)
+                lataaKuva(eyeLineart),
+                lataaKuva(noseSkin),
+                lataaKuva(noseViiva)
             ]);
 
             // VAIHE 1: KEHO (Pohjaväri + Calico-laikut + Brindle + Gradient + Valkoinen)
@@ -646,7 +755,29 @@
                 ctx.drawImage(imgViivaHarja, 0, 0, canvas.width, canvas.height);
             }
 
-            // VAIHE 5: SILMIEN POHJAVÄRI
+            // VAIHE 5: NENÄN VÄRI (Nahka)
+            if (imgNoseSkin) {
+                const tempNoseCanvas = document.createElement("canvas");
+                tempNoseCanvas.width = canvas.width;
+                tempNoseCanvas.height = canvas.height;
+                const tempNoseCtx = tempNoseCanvas.getContext("2d");
+
+                tempNoseCtx.drawImage(imgNoseSkin, 0, 0, canvas.width, canvas.height);
+                tempNoseCtx.globalCompositeOperation = "source-in";
+                tempNoseCtx.fillStyle = skinColor;
+                tempNoseCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.globalCompositeOperation = "source-over";
+                ctx.drawImage(tempNoseCanvas, 0, 0);
+            }
+
+            // VAIHE 6: NENÄN ÄÄRIVIIVAT
+            if (imgNoseViiva) {
+                ctx.globalCompositeOperation = "source-over";
+                ctx.drawImage(imgNoseViiva, 0, 0, canvas.width, canvas.height);
+            }
+
+            // VAIHE 7: SILMIEN POHJAVÄRI
             if (imgSilmät) {
                 const tempEyeCanvas = document.createElement("canvas");
                 tempEyeCanvas.width = canvas.width;
@@ -662,7 +793,7 @@
                 ctx.drawImage(tempEyeCanvas, 0, 0);
             }
 
-            // VAIHE 6: SILMIEN LINEART (Randomized on top of eye color)
+            // VAIHE 8: SILMIEN LINEART (Randomized on top of eye color)
             if (imgSilmätLineArt) {
                 ctx.globalCompositeOperation = "source-over";
                 ctx.drawImage(imgSilmätLineArt, 0, 0, canvas.width, canvas.height);
