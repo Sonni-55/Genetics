@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 15px;
-            max-width: 640px;
+            max-width: 680px;
             margin: auto;
             background-color: #f4f4f9;
         }
@@ -19,10 +19,11 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             margin-bottom: 15px;
         }
+        /* Asetetaan geenivalikot kahteen tasoon / riviin (6 saraketta per rivi) */
         .grid {
             display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            gap: 2px;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 6px 4px;
         }
         .grid-2 {
             display: grid;
@@ -30,7 +31,7 @@
             gap: 8px;
         }
         label {
-            font-size: 8px;
+            font-size: 9px;
             font-weight: bold;
             display: block;
             margin-bottom: 2px;
@@ -41,7 +42,8 @@
             padding: 4px 0px;
             border-radius: 6px;
             border: 1px solid #ccc;
-            font-size: 9px;
+            font-size: 10px;
+            text-align: center;
         }
         input[type="color"] {
             width: 100%;
@@ -111,6 +113,7 @@
         
         <h3>Isä</h3>
         <div class="grid">
+            <!-- RIVI 1 -->
             <div>
                 <label>M (Harja)</label>
                 <select id="isa_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
@@ -142,6 +145,7 @@
                 <label>O (Puna)</label>
                 <select id="isa_o"><option selected>OO</option><option>Oo</option><option>oo</option></select>
             </div>
+            <!-- RIVI 2 -->
             <div>
                 <label>N (Kuvio)</label>
                 <select id="isa_n"><option>NN</option><option selected>Nn</option><option>nn</option></select>
@@ -173,18 +177,20 @@
                 <label>V (Varjo)</label>
                 <select id="isa_v"><option>VV</option><option selected>Vv</option><option>vv</option></select>
             </div>
-            <div>
-                <label>Nenä</label>
-                <select id="isa_nose">
-                    <option value="smooth" selected>Smooth</option>
-                    <option value="big">Big</option>
-                    <option value="sharp">Sharp</option>
-                </select>
-            </div>
         </div>
 
-        <h3>Emä</h3>
+        <div style="margin-top: 10px;">
+            <label style="text-align: left; font-size: 10px;">Nenätyyppi</label>
+            <select id="isa_nose" style="width: 30%;">
+                <option value="smooth" selected>Smooth</option>
+                <option value="big">Big</option>
+                <option value="sharp">Sharp</option>
+            </select>
+        </div>
+
+        <h3 style="margin-top: 15px;">Emä</h3>
         <div class="grid">
+            <!-- RIVI 1 -->
             <div>
                 <label>M (Harja)</label>
                 <select id="ema_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
@@ -216,6 +222,7 @@
                 <label>O (Puna)</label>
                 <select id="ema_o"><option selected>OO</option><option>Oo</option><option>oo</option></select>
             </div>
+            <!-- RIVI 2 -->
             <div>
                 <label>N (Kuvio)</label>
                 <select id="ema_n"><option>NN</option><option selected>Nn</option><option>nn</option></select>
@@ -247,17 +254,18 @@
                 <label>V (Varjo)</label>
                 <select id="ema_v"><option>VV</option><option selected>Vv</option><option>vv</option></select>
             </div>
-            <div>
-                <label>Nenä</label>
-                <select id="ema_nose">
-                    <option value="smooth" selected>Smooth</option>
-                    <option value="big">Big</option>
-                    <option value="sharp">Sharp</option>
-                </select>
-            </div>
         </div>
 
-        <h3>Silmien värit</h3>
+        <div style="margin-top: 10px;">
+            <label style="text-align: left; font-size: 10px;">Nenätyyppi</label>
+            <select id="ema_nose" style="width: 30%;">
+                <option value="smooth" selected>Smooth</option>
+                <option value="big">Big</option>
+                <option value="sharp">Sharp</option>
+            </select>
+        </div>
+
+        <h3 style="margin-top: 15px;">Silmien värit</h3>
         <div class="grid-2">
             <div>
                 <label>Isän silmien väri</label>
@@ -328,11 +336,9 @@
 
         const earsAndPawsSkinFile = "Untitled309_20261009100644.png";
 
-        // UUDET KASVOMASKIT (50/50 mahdollisuus kasvoissa)
         const faceExtraKorvat = "Untitled311_20261009195258.png";
         const faceExtraKuono  = "Untitled311_20261009195304.png";
 
-        // RAITA-ASSETIT
         const stripeAssets = {
             limbs: [
                 { color: "Untitled311_20261009184723.png", outline: "Untitled311_20261009184731.png" },
@@ -349,7 +355,6 @@
             ]
         };
 
-        // TÄPLÄ-ASSETIT
         const spotAssets = {
             body: [
                 { color: "Untitled311_20261009192240.png", outline: "Untitled311_20261009192246.png" },
@@ -366,7 +371,6 @@
             ]
         };
 
-        // OCELOT-ASSETIT
         const ocelotAssets = {
             body: [
                 { color: "Untitled311_20261009193037.png", outline: "Untitled311_20261009193045.png" },
@@ -406,11 +410,6 @@
             const g = rgb1.g + factor * (rgb2.g - rgb1.g);
             const b = rgb1.b + factor * (rgb2.b - rgb1.b);
             return rgbToHex(r, g, b);
-        }
-
-        function tummennaVaria(colorHex, kerroin = 0.5) {
-            const rgb = hexToRgb(colorHex);
-            return rgbToHex(rgb.r * kerroin, rgb.g * kerroin, rgb.b * kerroin);
         }
 
         function arvoAlleeli(genotyyppi) {
@@ -453,17 +452,6 @@
             let dS = Math.max(0, Math.min(100, s + (Math.random() * 10 - 5)));
             let dL = Math.max(0, Math.min(100, l + (Math.random() * 12 - 6)));
             return `hsl(${dH}, ${dS}%, ${dL}%)`;
-        }
-
-        function hslToHex(h, s, l) {
-            l /= 100;
-            const a = s * Math.min(l, 1 - l) / 100;
-            const f = n => {
-                const k = (n + h / 30) % 12;
-                const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-                return Math.round(255 * color).toString(16).padStart(2, '0');
-            };
-            return `#${f(0)}${f(8)}${f(4)}`;
         }
 
         function piirraCalicoLaikut(ctx, width, height, vari, maara = 10) {
@@ -556,7 +544,6 @@
                 }
             }
 
-            // KUVIOTYYPPISÄÄNTÖ: Ocelot = R_ + pp
             let onkoRaitaGeeni = pentuR.includes("R");
             let onkoTaplaGeeni = (pentuP === "pp");
 
@@ -580,11 +567,14 @@
                 }
             }
 
-            // ARVOTAAN UUDET KASVOMASKIT (50/50 joko korvat, kuono tai molemmat)
             let onkoExtraKorvat = kuvioFace && (Math.random() < 0.5);
             let onkoExtraKuono  = kuvioFace && (Math.random() < 0.5);
 
+            let centerOpacity = 1.0; 
             let onkoVarjo = (pentuV === "vv");
+            if (onkoVarjo) {
+                centerOpacity = 0.30 + Math.random() * 0.50;
+            }
 
             document.getElementById("tulos").innerText = 
                 `Genotyyppi: ${currentGenotype}\n` +
@@ -617,11 +607,10 @@
                 kuvioFace: kuvioFace,
                 extraKorvat: onkoExtraKorvat ? faceExtraKorvat : null,
                 extraKuono: onkoExtraKuono ? faceExtraKuono : null,
-                onkoVarjo: onkoVarjo
+                centerOpacity: centerOpacity
             });
         }
 
-        // TÄYSIN TURVALLINEN LATAUSFUNKTIO (Estää valkoisen ruudun virheet)
         function lataaKuva(url) {
             return new Promise((resolve) => {
                 if (!url) return resolve(null);
@@ -699,70 +688,81 @@
                 bodyCtx.globalCompositeOperation = "source-in";
 
                 // A) Pohjaväri
-                bodyCtx.fillStyle = (opts.pentuS === "SS") ? "#ffffff" : opts.kehoVari;
+                bodyCtx.fillStyle = opts.kehoVari;
                 bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
 
-                if (opts.pentuS === "SS") {
-                    bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.kehoVari, 12);
-                } else if (opts.laikkavari) {
+                if (opts.laikkavari) {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.laikkavari, 10);
                 }
 
-                // B) GRADIENTTI (Vain turkin pohjavärille / laikuille!)
+                // B) GRADIENTTI
                 if (opts.onkoGradient) {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraGradient(bodyCtx, canvas.width, canvas.height);
                 }
 
-                // C) VALKOISET LAIKUT (Säilyvät puhtaan valkoisina!)
-                if (opts.pentuS !== "SS" && opts.pentuS.includes("S")) {
-                    bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 6);
+                // C) KUVIOT (Lasketaan dynaaminen tummennusväri pohjavärin mukaan)
+                function parseToRgb(colorStr) {
+                    if (colorStr.startsWith("hsl")) {
+                        let dummy = document.createElement("div");
+                        dummy.style.color = colorStr;
+                        document.body.appendChild(dummy);
+                        let computed = getComputedStyle(dummy).color;
+                        document.body.removeChild(dummy);
+                        let match = computed.match(/\d+/g);
+                        return match ? { r: parseInt(match[0]), g: parseInt(match[1]), b: parseInt(match[2]) } : { r: 100, g: 50, b: 20 };
+                    }
+                    return hexToRgb(colorStr);
                 }
 
-                // D) KUVIOT (Raidat, Täplät, Ocelot & Kasvokuvat)
-                const centerOpacity = opts.onkoVarjo ? 0.30 : 0.85;
+                let baseRgb = parseToRgb(opts.kehoVari);
 
-                const baseHex = opts.kehoVari.startsWith("hsl") ? hslToHex(30, 10, 20) : opts.kehoVari;
-                const patternCenterColor = tummennaVaria(baseHex, 0.4);
-                const patternOutlineColor = tummennaVaria(baseHex, 0.15);
+                // Arpotaan suhteellinen tummennuskerroin pohjaväristä
+                let centerFactor = 0.40 + Math.random() * 0.30; 
+                let outlineFactor = 0.15 + Math.random() * 0.20;
+
+                let patternCenterColor = `rgb(${Math.round(baseRgb.r * centerFactor)}, ${Math.round(baseRgb.g * centerFactor)}, ${Math.round(baseRgb.b * centerFactor)})`;
+                let patternOutlineColor = `rgb(${Math.round(baseRgb.r * outlineFactor)}, ${Math.round(baseRgb.g * outlineFactor)}, ${Math.round(baseRgb.b * outlineFactor)})`;
+
+                let outlineOpacity = 0.80 + Math.random() * 0.15;
 
                 function piirraKuvioKankaalle(imgColor, imgOutline) {
                     if (!imgColor && !imgOutline) return;
 
+                    // Keskusta (Multiply + pienennetty suhteellinen sävy)
                     if (imgColor) {
-                        const tempColorCanvas = document.createElement("canvas");
-                        tempColorCanvas.width = canvas.width; tempColorCanvas.height = canvas.height;
-                        const tempColorCtx = tempColorCanvas.getContext("2d");
+                        const tempCanvas = document.createElement("canvas");
+                        tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
+                        const tempCtx = tempCanvas.getContext("2d");
 
-                        tempColorCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
-                        tempColorCtx.globalCompositeOperation = "source-in";
-                        tempColorCtx.fillStyle = patternCenterColor;
-                        tempColorCtx.fillRect(0, 0, canvas.width, canvas.height);
+                        tempCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
+                        tempCtx.globalCompositeOperation = "source-in";
+                        tempCtx.fillStyle = patternCenterColor;
+                        tempCtx.fillRect(0, 0, canvas.width, canvas.height);
 
                         bodyCtx.save();
-                        bodyCtx.globalCompositeOperation = "source-atop";
-                        bodyCtx.globalAlpha = centerOpacity;
-                        bodyCtx.drawImage(tempColorCanvas, 0, 0);
+                        bodyCtx.globalCompositeOperation = "multiply";
+                        bodyCtx.globalAlpha = opts.centerOpacity;
+                        bodyCtx.drawImage(tempCanvas, 0, 0);
                         bodyCtx.restore();
                     }
 
+                    // Ääriviiva / Pisteet
                     if (imgOutline) {
-                        const tempOutlineCanvas = document.createElement("canvas");
-                        tempOutlineCanvas.width = canvas.width; tempOutlineCanvas.height = canvas.height;
-                        const tempOutlineCtx = tempOutlineCanvas.getContext("2d");
+                        const tempCanvas = document.createElement("canvas");
+                        tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
+                        const tempCtx = tempCanvas.getContext("2d");
 
-                        tempOutlineCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
-                        tempOutlineCtx.globalCompositeOperation = "source-in";
-                        tempOutlineCtx.fillStyle = patternOutlineColor;
-                        tempOutlineCtx.fillRect(0, 0, canvas.width, canvas.height);
+                        tempCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
+                        tempCtx.globalCompositeOperation = "source-in";
+                        tempCtx.fillStyle = patternOutlineColor;
+                        tempCtx.fillRect(0, 0, canvas.width, canvas.height);
 
                         bodyCtx.save();
-                        bodyCtx.globalCompositeOperation = "source-atop";
-                        bodyCtx.globalAlpha = 0.90;
-                        bodyCtx.drawImage(tempOutlineCanvas, 0, 0);
+                        bodyCtx.globalCompositeOperation = "multiply";
+                        bodyCtx.globalAlpha = outlineOpacity;
+                        bodyCtx.drawImage(tempCanvas, 0, 0);
                         bodyCtx.restore();
                     }
                 }
@@ -773,6 +773,19 @@
                     piirraKuvioKankaalle(imgFaceColor, imgFaceOutline);
                     if (imgExtraKorvat) piirraKuvioKankaalle(imgExtraKorvat, null);
                     if (imgExtraKuono)  piirraKuvioKankaalle(imgExtraKuono, null);
+                }
+
+                // D) VALKOISET LAIKUT (Ss/SS - Piirretään kuvioiden PÄÄLLE!)
+                if (opts.pentuS === "SS") {
+                    bodyCtx.globalCompositeOperation = "source-atop";
+                    bodyCtx.fillStyle = "#ffffff";
+                    bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    bodyCtx.globalCompositeOperation = "destination-out";
+                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#000000", 12);
+                } else if (opts.pentuS.includes("S")) {
+                    bodyCtx.globalCompositeOperation = "source-atop";
+                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 6);
                 }
 
                 ctx.globalCompositeOperation = "source-over";
