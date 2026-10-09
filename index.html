@@ -620,8 +620,7 @@
                 img.src = url;
             });
         }
-
-        async function piirraErillinenHarjaPentu(opts) {
+                async function piirraErillinenHarjaPentu(opts) {
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -702,7 +701,7 @@
                     piirraGradient(bodyCtx, canvas.width, canvas.height);
                 }
 
-                // C) KUVIOT (Lasketaan dynaaminen tummennusväri pohjavärin mukaan)
+                // C) KUVIOT (Yhdistetään ensin saumattomaksi kerrokseksi)
                 function parseToRgb(colorStr) {
                     if (colorStr.startsWith("hsl")) {
                         let dummy = document.createElement("div");
@@ -718,62 +717,58 @@
 
                 let baseRgb = parseToRgb(opts.kehoVari);
 
-                // Arpotaan suhteellinen tummennuskerroin pohjaväristä
                 let centerFactor = 0.40 + Math.random() * 0.30; 
                 let outlineFactor = 0.15 + Math.random() * 0.20;
 
                 let patternCenterColor = `rgb(${Math.round(baseRgb.r * centerFactor)}, ${Math.round(baseRgb.g * centerFactor)}, ${Math.round(baseRgb.b * centerFactor)})`;
                 let patternOutlineColor = `rgb(${Math.round(baseRgb.r * outlineFactor)}, ${Math.round(baseRgb.g * outlineFactor)}, ${Math.round(baseRgb.b * outlineFactor)})`;
 
-                let outlineOpacity = 0.80 + Math.random() * 0.15;
+                // V-geenin mukainen keskustan opasiteetti: V_ = 91-100%, vv = 50-90%
+                let centerOpacity = opts.onkoVarjo ? (0.50 + Math.random() * 0.40) : (0.91 + Math.random() * 0.09);
 
-                function piirraKuvioKankaalle(imgColor, imgOutline) {
-                    if (!imgColor && !imgOutline) return;
+                // Luo kaksi kokoavaa kangasta (Keskustat ja Reunat erikseen), jotta päällekkäisyyskohdat eivät tummene kaksinkertaisesti!
+                const combinedCenterCanvas = document.createElement("canvas");
+                combinedCenterCanvas.width = canvas.width; combinedCenterCanvas.height = canvas.height;
+                const combinedCenterCtx = combinedCenterCanvas.getContext("2d");
 
-                    // Keskusta (Multiply + pienennetty suhteellinen sävy)
-                    if (imgColor) {
-                        const tempCanvas = document.createElement("canvas");
-                        tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
-                        const tempCtx = tempCanvas.getContext("2d");
+                const combinedOutlineCanvas = document.createElement("canvas");
+                combinedOutlineCanvas.width = canvas.width; combinedOutlineCanvas.height = canvas.height;
+                const combinedOutlineCtx = combinedOutlineCanvas.getContext("2d");
 
-                        tempCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
-                        tempCtx.globalCompositeOperation = "source-in";
-                        tempCtx.fillStyle = patternCenterColor;
-                        tempCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-                        bodyCtx.save();
-                        bodyCtx.globalCompositeOperation = "multiply";
-                        bodyCtx.globalAlpha = opts.centerOpacity;
-                        bodyCtx.drawImage(tempCanvas, 0, 0);
-                        bodyCtx.restore();
-                    }
-
-                    // Ääriviiva / Pisteet
-                    if (imgOutline) {
-                        const tempCanvas = document.createElement("canvas");
-                        tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
-                        const tempCtx = tempCanvas.getContext("2d");
-
-                        tempCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
-                        tempCtx.globalCompositeOperation = "source-in";
-                        tempCtx.fillStyle = patternOutlineColor;
-                        tempCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-                        bodyCtx.save();
-                        bodyCtx.globalCompositeOperation = "multiply";
-                        bodyCtx.globalAlpha = outlineOpacity;
-                        bodyCtx.drawImage(tempCanvas, 0, 0);
-                        bodyCtx.restore();
-                    }
+                function lisaaKuvioKokoelmaan(imgColor, imgOutline) {
+                    if (imgColor) combinedCenterCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
+                    if (imgOutline) combinedOutlineCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
                 }
 
-                if (opts.kuvioLimbs) piirraKuvioKankaalle(imgLimbsColor, imgLimbsOutline);
-                if (opts.kuvioBody) piirraKuvioKankaalle(imgBodyColor, imgBodyOutline);
+                if (opts.kuvioLimbs) lisaaKuvioKokoelmaan(imgLimbsColor, imgLimbsOutline);
+                if (opts.kuvioBody) lisaaKuvioKokoelmaan(imgBodyColor, imgBodyOutline);
                 if (opts.kuvioFace) {
-                    piirraKuvioKankaalle(imgFaceColor, imgFaceOutline);
-                    if (imgExtraKorvat) piirraKuvioKankaalle(imgExtraKorvat, null);
-                    if (imgExtraKuono)  piirraKuvioKankaalle(imgExtraKuono, null);
+                    lisaaKuvioKokoelmaan(imgFaceColor, imgFaceOutline);
+                    if (imgExtraKorvat) lisaaKuvioKokoelmaan(imgExtraKorvat, null);
+                    if (imgExtraKuono)  lisaaKuvioKokoelmaan(imgExtraKuono, null);
                 }
+
+                // 1. Piirretään yhdistetty keskustakuvio (VV = 91-100%, vv = 50-90%)
+                combinedCenterCtx.globalCompositeOperation = "source-in";
+                combinedCenterCtx.fillStyle = patternCenterColor;
+                combinedCenterCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                bodyCtx.save();
+                bodyCtx.globalCompositeOperation = "multiply";
+                bodyCtx.globalAlpha = centerOpacity;
+                bodyCtx.drawImage(combinedCenterCanvas, 0, 0);
+                bodyCtx.restore();
+
+                // 2. Piirretään yhdistetty reuna/ääriviiva (Aina 100% peittävä)
+                combinedOutlineCtx.globalCompositeOperation = "source-in";
+                combinedOutlineCtx.fillStyle = patternOutlineColor;
+                combinedOutlineCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                bodyCtx.save();
+                bodyCtx.globalCompositeOperation = "multiply";
+                bodyCtx.globalAlpha = 1.0; // Ääriviivat pysyvät aina 100%
+                bodyCtx.drawImage(combinedOutlineCanvas, 0, 0);
+                bodyCtx.restore();
 
                 // D) VALKOISET LAIKUT (Ss/SS - Piirretään kuvioiden PÄÄLLE!)
                 if (opts.pentuS === "SS") {
@@ -848,7 +843,7 @@
             // VAIHE 6: NENÄ JA SUU LINEART
             if (imgNoseViiva) ctx.drawImage(imgNoseViiva, 0, 0, canvas.width, canvas.height);
             if (imgMouthLineart) ctx.drawImage(imgMouthLineart, 0, 0, canvas.width, canvas.height);
-        }
+          }
 
         function lataaKuvaLaitteelle() {
             const canvas = document.getElementById("canvas");
