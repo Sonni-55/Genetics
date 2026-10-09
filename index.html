@@ -21,7 +21,7 @@
         }
         .grid {
             display: grid;
-            grid-template-columns: repeat(9, 1fr);
+            grid-template-columns: repeat(8, 1fr);
             gap: 4px;
         }
         .grid-2 {
@@ -147,10 +147,6 @@
                 <select id="isa_n"><option>NN</option><option selected>Nn</option><option>nn</option></select>
             </div>
             <div>
-                <label>T (Raidat)</label>
-                <select id="isa_t"><option>TT</option><option selected>Tt</option><option>tt</option></select>
-            </div>
-            <div>
                 <label>G (Grad.)</label>
                 <select id="isa_g"><option>GG</option><option selected>Gg</option><option>gg</option></select>
             </div>
@@ -200,10 +196,6 @@
             <div>
                 <label>N (Kuvio)</label>
                 <select id="ema_n"><option>NN</option><option selected>Nn</option><option>nn</option></select>
-            </div>
-            <div>
-                <label>T (Raidat)</label>
-                <select id="ema_t"><option>TT</option><option selected>Tt</option><option>tt</option></select>
             </div>
             <div>
                 <label>G (Grad.)</label>
@@ -274,7 +266,7 @@
             "Untitled309_20261008221015.png"
         ];
 
-        // Mouth lineart variations (lineart only, no colors)
+        // Mouth lineart variations
         const mouthLinearts = [
             "Untitled309_20261009102847.png",
             "Untitled309_20261009102854.png",
@@ -284,21 +276,24 @@
             "Untitled309_20261009103305.png"
         ];
 
-        // Nose data with actual image files
+        // Nose data updated with corrected file names
         const noseData = {
             smooth: {
-                skin: "Untitled309_20261008215650.png",
-                lineart: "Untitled309_20261008215450.png"
+                skin: "Untitled309_20261009100656.png",
+                lineart: "Untitled309_20261009100650.png"
             },
             big: {
-                skin: "Untitled309_20261008220505.png",
-                lineart: "Untitled309_20261008220001.png"
+                skin: "Untitled309_20261009100705.png",
+                lineart: "Untitled309_20261009100701.png"
             },
             sharp: {
-                skin: "Untitled309_20261008221116.png",
-                lineart: "Untitled309_20261008221011.png"
+                skin: "Untitled309_20261009100716.png",
+                lineart: "Untitled309_20261009100711.png"
             }
         };
+
+        // Paws and Ears base skin image file
+        const earsAndPawsSkinFile = "Untitled309_20261009100644.png";
 
         // Store current genotype for filename
         let currentGenotype = "";
@@ -366,7 +361,6 @@
         }
 
         function randomizeColor(color1, color2) {
-            // Randomly choose one of the parent colors or a blend
             const rand = Math.random();
             if (rand < 0.35) {
                 return color1;
@@ -456,40 +450,9 @@
             }
         }
 
-        // --- BRINDLE-RAITOJEN PIIRTO ---
-        function piirraBrindleRaidat(ctx, width, height) {
-            ctx.save();
-            // Raitojen opasiteetti 40% - 100%
-            ctx.globalAlpha = 0.4 + Math.random() * 0.6;
-            ctx.fillStyle = "#000000";
-
-            let raitojenMaara = 25 + Math.floor(Math.random() * 20);
-            for (let i = 0; i < raitojenMaara; i++) {
-                let x = Math.random() * width;
-                let y = Math.random() * height;
-                let pituus = 150 + Math.random() * 300;
-                let paksuus = 8 + Math.random() * 20;
-
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-                // Käännetään raitoja pystypainotteisesti pienen aaltoilun kera
-                ctx.bezierCurveTo(
-                    x + (Math.random() * 40 - 20), y + pituus * 0.3,
-                    x + (Math.random() * 60 - 30), y + pituus * 0.7,
-                    x + (Math.random() * 20 - 10), y + pituus
-                );
-                ctx.lineWidth = paksuus;
-                ctx.strokeStyle = "#000000";
-                ctx.lineCap = "round";
-                ctx.stroke();
-            }
-            ctx.restore();
-        }
-
         // --- GRADIENTIN PIIRTO ---
         function piirraGradient(ctx, width, height) {
             ctx.save();
-            // Satunnainen kulma/suunta gradientille
             let x1 = Math.random() * width;
             let y1 = Math.random() * height;
             let x2 = Math.random() * width;
@@ -497,7 +460,6 @@
 
             let grad = ctx.createLinearGradient(x1, y1, x2, y2);
             
-            // Arvotaan onko liukuväri tummentava vaiko vaalentava
             if (Math.random() < 0.5) {
                 grad.addColorStop(0, "rgba(0, 0, 0, 0.4)");
                 grad.addColorStop(1, "rgba(0, 0, 0, 0.0)");
@@ -520,7 +482,6 @@
             let isaH = document.getElementById("isa_h").value;
             let isaO = document.getElementById("isa_o").value;
             let isaN = document.getElementById("isa_n").value;
-            let isaT = document.getElementById("isa_t").value;
             let isaG = document.getElementById("isa_g").value;
             let isaNose = document.getElementById("isa_nose").value;
 
@@ -531,22 +492,21 @@
             let emaH = document.getElementById("ema_h").value;
             let emaO = document.getElementById("ema_o").value;
             let emaN = document.getElementById("ema_n").value;
-            let emaT = document.getElementById("ema_t").value;
             let emaG = document.getElementById("ema_g").value;
             let emaNose = document.getElementById("ema_nose").value;
 
-            // Eye colors - now randomized
+            // Eye colors
             let isaEyeColor = document.getElementById("isa_eyes").value.toUpperCase();
             let emaEyeColor = document.getElementById("ema_eyes").value.toUpperCase();
             let pentuEyeColor = randomizeColor(isaEyeColor, emaEyeColor);
             let selectedEyeLineart = getRandomEyeLineart();
 
-            // Skin colors - now randomized
+            // Skin colors
             let isaSkinColor = document.getElementById("isa_skin").value.toUpperCase();
             let emaSkinColor = document.getElementById("ema_skin").value.toUpperCase();
             let pentuSkinColor = randomizeColor(isaSkinColor, emaSkinColor);
 
-            // Mouth lineart - randomized
+            // Mouth lineart
             let selectedMouthLineart = getRandomMouthLineart();
 
             // Nose - 50/50 inheritance
@@ -560,11 +520,10 @@
             let pentuH = luoGenotyyppi(isaH, emaH);
             let pentuO = luoGenotyyppi(isaO, emaO);
             let pentuN = luoGenotyyppi(isaN, emaN);
-            let pentuT = luoGenotyyppi(isaT, emaT);
             let pentuG = luoGenotyyppi(isaG, emaG);
 
             // Store genotype for download filename
-            currentGenotype = `${pentuM}_${pentuS}_${pentuC}_${pentuB}_${pentuH}_${pentuO}_${pentuN}_${pentuT}_${pentuG}`;
+            currentGenotype = `${pentuM}_${pentuS}_${pentuC}_${pentuB}_${pentuH}_${pentuO}_${pentuN}_${pentuG}`;
 
             // Valkoisten laikkujen määrä
             let valkoistenMaara = 0;
@@ -574,7 +533,6 @@
             // Ominaisuudet
             let onkoHarja = pentuM.includes("M");
             let onkoKihara = (pentuC === "cc");
-            let onkoBrindle = pentuT.includes("T");
             let onkoGradient = (pentuG === "gg");
 
             // 3. Määritä fenotyypit
@@ -602,7 +560,6 @@
                 harjaNimi = "Vaalea harja";
             }
 
-            // OO/Oo = Punainen, oo = Kermankeltainen (Dilute punainen)
             let punainenHSL, punainenNimi;
             if (pentuO === "oo") {
                 punainenHSL = { h: 38, s: 55, l: 78 };
@@ -637,9 +594,6 @@
                 kehoTeksti = `Kilpikonnakuvio (${tummaNimi} / ${punainenNimi})`;
             }
 
-            if (onkoBrindle) {
-                kehoTeksti += " + Brindle";
-            }
             if (onkoGradient) {
                 kehoTeksti += " + Gradient";
             }
@@ -669,14 +623,14 @@
             let harjaTeksti = onkoHarja ? `Harja (${harjaNimi})` : "Ei harjaa";
 
             document.getElementById("tulos").innerText = 
-                `Genotyyppi: ${pentuM} / ${pentuS} / ${pentuC} / ${pentuB} / ${pentuH} / ${pentuO} / ${pentuN} / ${pentuT} / ${pentuG}\n` +
+                `Genotyyppi: ${pentuM} / ${pentuS} / ${pentuC} / ${pentuB} / ${pentuH} / ${pentuO} / ${pentuN} / ${pentuG}\n` +
                 `Silmien väri: ${pentuEyeColor}\n` +
                 `Nahkan väri: ${pentuSkinColor}\n` +
                 `Nenä: ${pentuNose}\n` +
                 `Ominaisuudet: ${harjaTeksti}, Keho: ${kehoTeksti}`;
 
             // 6. Piirto
-            piirraErillinenHarjaPentu(pohjaTiedosto, pohjaHarjaTiedosto, viivaTiedosto, viivaHarjaTiedosto, paavari, laikkavari, variHarja, valkoistenMaara, onkoBrindle, onkoGradient, pentuEyeColor, selectedEyeLineart, pentuSkinColor, noseSkinTiedosto, noseViivaaTiedosto, selectedMouthLineart);
+            piirraErillinenHarjaPentu(pohjaTiedosto, pohjaHarjaTiedosto, viivaTiedosto, viivaHarjaTiedosto, paavari, laikkavari, variHarja, valkoistenMaara, onkoGradient, pentuEyeColor, selectedEyeLineart, pentuSkinColor, noseSkinTiedosto, noseViivaaTiedosto, selectedMouthLineart, earsAndPawsSkinFile);
         }
 
         function lataaKuva(url) {
@@ -689,12 +643,12 @@
             });
         }
 
-        async function piirraErillinenHarjaPentu(pohja, pohjaHarja, viiva, viivaHarja, kehoVari, laikkavari, harjaVari, valkoistenMaara, onkoBrindle, onkoGradient, eyeColor, eyeLineart, skinColor, noseSkin, noseViiva, mouthLineart) {
+        async function piirraErillinenHarjaPentu(pohja, pohjaHarja, viiva, viivaHarja, kehoVari, laikkavari, harjaVari, valkoistenMaara, onkoGradient, eyeColor, eyeLineart, skinColor, noseSkin, noseViiva, mouthLineart, earsAndPawsSkin) {
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const [imgPohja, imgPohjaHarja, imgViiva, imgViivaHarja, imgSilmät, imgSilmätLineArt, imgNoseSkin, imgNoseViiva, imgMouthLineart] = await Promise.all([
+            const [imgPohja, imgPohjaHarja, imgViiva, imgViivaHarja, imgSilmät, imgSilmätLineArt, imgNoseSkin, imgNoseViiva, imgMouthLineart, imgEarsAndPawsSkin] = await Promise.all([
                 lataaKuva(pohja),
                 lataaKuva(pohjaHarja),
                 lataaKuva(viiva),
@@ -703,10 +657,11 @@
                 lataaKuva(eyeLineart),
                 lataaKuva(noseSkin),
                 lataaKuva(noseViiva),
-                lataaKuva(mouthLineart)
+                lataaKuva(mouthLineart),
+                lataaKuva(earsAndPawsSkin)
             ]);
 
-            // VAIHE 1: KEHO (Pohjaväri + Calico-laikut + Brindle + Gradient + Valkoinen)
+            // VAIHE 1: KEHO (Pohjaväri + Calico-laikut + Gradient + Valkoinen)
             if (imgPohja) {
                 ctx.globalCompositeOperation = "source-over";
                 ctx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
@@ -721,19 +676,13 @@
                     piirraCalicoLaikut(ctx, canvas.width, canvas.height, laikkavari, 10);
                 }
 
-                // B) Brindle-raidat (Calicon PÄÄLLE)
-                if (onkoBrindle) {
-                    ctx.globalCompositeOperation = "source-atop";
-                    piirraBrindleRaidat(ctx, canvas.width, canvas.height);
-                }
-
-                // C) Gradient (Brindlen ja Calicon PÄÄLLE, mutta valkoisen ALLE)
+                // B) Gradient (Calicon PÄÄLLE, mutta valkoisen ALLE)
                 if (onkoGradient) {
                     ctx.globalCompositeOperation = "source-atop";
                     piirraGradient(ctx, canvas.width, canvas.height);
                 }
 
-                // D) Valkoiset laikut (Kaikkien edellisten PÄÄLLE)
+                // C) Valkoiset laikut (Kaikkien edellisten PÄÄLLE)
                 if (valkoistenMaara > 0) {
                     ctx.globalCompositeOperation = "source-atop";
                     piirraCalicoLaikut(ctx, canvas.width, canvas.height, "#ffffff", valkoistenMaara);
@@ -784,35 +733,39 @@
                 ctx.drawImage(tempEyeCanvas, 0, 0);
             }
 
-            // VAIHE 6: SILMIEN LINEART (Randomized on top of eye color)
+            // VAIHE 6: SILMIEN LINEART
             if (imgSilmätLineArt) {
                 ctx.globalCompositeOperation = "source-over";
                 ctx.drawImage(imgSilmätLineArt, 0, 0, canvas.width, canvas.height);
             }
 
-            // VAIHE 7: NENÄN VÄRI (Nahka) - NOW ON TOP
-            if (imgNoseSkin) {
-                const tempNoseCanvas = document.createElement("canvas");
-                tempNoseCanvas.width = canvas.width;
-                tempNoseCanvas.height = canvas.height;
-                const tempNoseCtx = tempNoseCanvas.getContext("2d");
+            // VAIHE 7: NAHKAN VÄRI (Nenä + Korvat + Tassut)
+            if (imgNoseSkin || imgEarsAndPawsSkin) {
+                const tempSkinCanvas = document.createElement("canvas");
+                tempSkinCanvas.width = canvas.width;
+                tempSkinCanvas.height = canvas.height;
+                const tempSkinCtx = tempSkinCanvas.getContext("2d");
 
-                tempNoseCtx.drawImage(imgNoseSkin, 0, 0, canvas.width, canvas.height);
-                tempNoseCtx.globalCompositeOperation = "source-in";
-                tempNoseCtx.fillStyle = skinColor;
-                tempNoseCtx.fillRect(0, 0, canvas.width, canvas.height);
+                // Piirretään nenä sekä korvat/tassut samalle väliaikaiselle kankaalle
+                if (imgEarsAndPawsSkin) tempSkinCtx.drawImage(imgEarsAndPawsSkin, 0, 0, canvas.width, canvas.height);
+                if (imgNoseSkin) tempSkinCtx.drawImage(imgNoseSkin, 0, 0, canvas.width, canvas.height);
+
+                // Värjätään alueet skinColor-värillä
+                tempSkinCtx.globalCompositeOperation = "source-in";
+                tempSkinCtx.fillStyle = skinColor;
+                tempSkinCtx.fillRect(0, 0, canvas.width, canvas.height);
 
                 ctx.globalCompositeOperation = "source-over";
-                ctx.drawImage(tempNoseCanvas, 0, 0);
+                ctx.drawImage(tempSkinCanvas, 0, 0);
             }
 
-            // VAIHE 8: NENÄN ÄÄRIVIIVAT - NOW ON TOP
+            // VAIHE 8: NENÄN ÄÄRIVIIVAT
             if (imgNoseViiva) {
                 ctx.globalCompositeOperation = "source-over";
                 ctx.drawImage(imgNoseViiva, 0, 0, canvas.width, canvas.height);
             }
 
-            // VAIHE 9: SUUN LINEART (Randomized, lineart only - no color)
+            // VAIHE 9: SUUN LINEART
             if (imgMouthLineart) {
                 ctx.globalCompositeOperation = "source-over";
                 ctx.drawImage(imgMouthLineart, 0, 0, canvas.width, canvas.height);
@@ -822,7 +775,6 @@
         function lataaKuvaLaitteelle() {
             const canvas = document.getElementById("canvas");
             const latausLinkki = document.createElement("a");
-            // Use genotype as filename, replace slashes with underscores
             latausLinkki.download = `${currentGenotype}.png`;
             latausLinkki.href = canvas.toDataURL("image/png");
             document.body.appendChild(latausLinkki);
