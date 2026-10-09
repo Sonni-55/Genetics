@@ -284,21 +284,24 @@
             "Untitled309_20261009103305.png"
         ];
 
-        // Nose data
+        // Nose data with actual image files
         const noseData = {
             smooth: {
-                lineart: "Untitled309_20261008153420.png",
-                color: "Untitled309_20261008153420.png"
+                skin: "Untitled309_20261008215650.png",
+                lineart: "Untitled309_20261008215450.png"
             },
             big: {
-                lineart: "Untitled309_20261008153420.png",
-                color: "Untitled309_20261008153420.png"
+                skin: "Untitled309_20261008220505.png",
+                lineart: "Untitled309_20261008220001.png"
             },
             sharp: {
-                lineart: "Untitled309_20261008153420.png",
-                color: "Untitled309_20261008153420.png"
+                skin: "Untitled309_20261008221116.png",
+                lineart: "Untitled309_20261008221011.png"
             }
         };
+
+        // Store current genotype for filename
+        let currentGenotype = "";
 
         // Color sync functionality
         document.getElementById("isa_eyes").addEventListener("input", (e) => {
@@ -560,6 +563,9 @@
             let pentuT = luoGenotyyppi(isaT, emaT);
             let pentuG = luoGenotyyppi(isaG, emaG);
 
+            // Store genotype for download filename
+            currentGenotype = `${pentuM}_${pentuS}_${pentuC}_${pentuB}_${pentuH}_${pentuO}_${pentuN}_${pentuT}_${pentuG}`;
+
             // Valkoisten laikkujen määrä
             let valkoistenMaara = 0;
             if (pentuS === "SS") valkoistenMaara = 18;
@@ -655,20 +661,9 @@
                 ? (onkoKihara ? "Untitled309_20261008153420.png" : "Untitled309_20261008153429.png") 
                 : null;
 
-            // Nose files based on inherited nose type
-            let noseSkinTiedosto = "";
-            let noseViivaaTiedosto = "";
-            
-            if (pentuNose === "smooth") {
-                noseSkinTiedosto = "Untitled309_20261008215650.png";
-                noseViivaaTiedosto = "Untitled309_20261008215450.png";
-            } else if (pentuNose === "big") {
-                noseSkinTiedosto = "Untitled309_20261008220505.png";
-                noseViivaaTiedosto = "Untitled309_20261008220001.png";
-            } else if (pentuNose === "sharp") {
-                noseSkinTiedosto = "Untitled309_20261008221116.png";
-                noseViivaaTiedosto = "Untitled309_20261008221011.png";
-            }
+            // Get nose files based on inherited nose type
+            let noseSkinTiedosto = noseData[pentuNose].skin;
+            let noseViivaaTiedosto = noseData[pentuNose].lineart;
 
             // 5. Tekstit
             let harjaTeksti = onkoHarja ? `Harja (${harjaNimi})` : "Ei harjaa";
@@ -827,7 +822,8 @@
         function lataaKuvaLaitteelle() {
             const canvas = document.getElementById("canvas");
             const latausLinkki = document.createElement("a");
-            latausLinkki.download = "geneticadopt.png";
+            // Use genotype as filename, replace slashes with underscores
+            latausLinkki.download = `${currentGenotype}.png`;
             latausLinkki.href = canvas.toDataURL("image/png");
             document.body.appendChild(latausLinkki);
             latausLinkki.click();
