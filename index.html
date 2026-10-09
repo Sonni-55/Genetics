@@ -795,20 +795,17 @@
                 bodyCtx.drawImage(combinedCenterCanvas, 0, 0);
                 bodyCtx.restore();
 
-                // 2. Ääriviivat: vältä päällekkäisyyksien ylimääräistä tummumista
-// Muutetaan ääriviivojen peittävyys ensin yhtenäiseksi.
-teeTaysinPeittavaksi(
-    combinedOutlineCtx,
-    canvas.width,
-    canvas.height
-);
+                // 2. Ääriviivat
+                teeTaysinPeittavaksi(combinedOutlineCtx, canvas.width, canvas.height);
+                combinedOutlineCtx.globalCompositeOperation = "source-in";
+                combinedOutlineCtx.fillStyle = patternOutlineColor;
+                combinedOutlineCtx.fillRect(0, 0, canvas.width, canvas.height);
 
-// Väritetään ääriviivat pohjaväristä johdetulla värillä.
-combinedOutlineCtx.globalCompositeOperation = "source-in";
-combinedOutlineCtx.fillStyle = patternOutlineColor;
-combinedOutlineCtx.fillRect(
-    0, 0, canvas.width, canvas.height
-);
+                bodyCtx.save();
+                bodyCtx.globalCompositeOperation = "multiply";
+                bodyCtx.globalAlpha = 1.0;
+                bodyCtx.drawImage(combinedOutlineCanvas, 0, 0);
+                bodyCtx.restore();
 
                 // D) VALKOISET LAIKUT (Korjattu: Ei peitä kokonaan)
                 if (opts.pentuS === "SS") {
