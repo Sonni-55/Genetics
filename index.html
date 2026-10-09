@@ -773,29 +773,7 @@
                 ctx.drawImage(imgViivaHarja, 0, 0, canvas.width, canvas.height);
             }
 
-            // VAIHE 5: NENÄN VÄRI (Nahka)
-            if (imgNoseSkin) {
-                const tempNoseCanvas = document.createElement("canvas");
-                tempNoseCanvas.width = canvas.width;
-                tempNoseCanvas.height = canvas.height;
-                const tempNoseCtx = tempNoseCanvas.getContext("2d");
-
-                tempNoseCtx.drawImage(imgNoseSkin, 0, 0, canvas.width, canvas.height);
-                tempNoseCtx.globalCompositeOperation = "source-in";
-                tempNoseCtx.fillStyle = skinColor;
-                tempNoseCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.globalCompositeOperation = "source-over";
-                ctx.drawImage(tempNoseCanvas, 0, 0);
-            }
-
-            // VAIHE 6: NENÄN ÄÄRIVIIVAT
-            if (imgNoseViiva) {
-                ctx.globalCompositeOperation = "source-over";
-                ctx.drawImage(imgNoseViiva, 0, 0, canvas.width, canvas.height);
-            }
-
-            // VAIHE 7: SILMIEN POHJAVÄRI
+            // VAIHE 5: SILMIEN POHJAVÄRI
             if (imgSilmät) {
                 const tempEyeCanvas = document.createElement("canvas");
                 tempEyeCanvas.width = canvas.width;
@@ -811,10 +789,32 @@
                 ctx.drawImage(tempEyeCanvas, 0, 0);
             }
 
-            // VAIHE 8: SILMIEN LINEART (Randomized on top of eye color)
+            // VAIHE 6: SILMIEN LINEART (Randomized on top of eye color)
             if (imgSilmätLineArt) {
                 ctx.globalCompositeOperation = "source-over";
                 ctx.drawImage(imgSilmätLineArt, 0, 0, canvas.width, canvas.height);
+            }
+
+            // VAIHE 7: NENÄN VÄRI (Nahka) - NOW ON TOP
+            if (imgNoseSkin) {
+                const tempNoseCanvas = document.createElement("canvas");
+                tempNoseCanvas.width = canvas.width;
+                tempNoseCanvas.height = canvas.height;
+                const tempNoseCtx = tempNoseCanvas.getContext("2d");
+
+                tempNoseCtx.drawImage(imgNoseSkin, 0, 0, canvas.width, canvas.height);
+                tempNoseCtx.globalCompositeOperation = "source-in";
+                tempNoseCtx.fillStyle = skinColor;
+                tempNoseCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.globalCompositeOperation = "source-over";
+                ctx.drawImage(tempNoseCanvas, 0, 0);
+            }
+
+            // VAIHE 8: NENÄN ÄÄRIVIIVAT - NOW ON TOP
+            if (imgNoseViiva) {
+                ctx.globalCompositeOperation = "source-over";
+                ctx.drawImage(imgNoseViiva, 0, 0, canvas.width, canvas.height);
             }
 
             // VAIHE 9: SUUN LINEART (Randomized, lineart only - no color)
