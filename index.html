@@ -8,7 +8,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 15px;
-            max-width: 620px;
+            max-width: 640px;
             margin: auto;
             background-color: #f4f4f9;
         }
@@ -21,8 +21,8 @@
         }
         .grid {
             display: grid;
-            grid-template-columns: repeat(11, 1fr);
-            gap: 3px;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 2px;
         }
         .grid-2 {
             display: grid;
@@ -162,6 +162,10 @@
                 </select>
             </div>
             <div>
+                <label>P (Täplä)</label>
+                <select id="isa_p"><option>PP</option><option selected>Pp</option><option>pp</option></select>
+            </div>
+            <div>
                 <label>R (Raita)</label>
                 <select id="isa_r"><option>RR</option><option selected>Rr</option><option>rr</option></select>
             </div>
@@ -230,6 +234,10 @@
                     <option value="aa1">aa1</option>
                     <option value="a1a1">a1a1</option>
                 </select>
+            </div>
+            <div>
+                <label>P (Täplä)</label>
+                <select id="ema_p"><option>PP</option><option selected>Pp</option><option>pp</option></select>
             </div>
             <div>
                 <label>R (Raita)</label>
@@ -320,6 +328,7 @@
 
         const earsAndPawsSkinFile = "Untitled309_20261009100644.png";
 
+        // RAITA-ASSETIT
         const stripeAssets = {
             limbs: [
                 { color: "Untitled311_20261009184723.png", outline: "Untitled311_20261009184731.png" },
@@ -333,6 +342,34 @@
             face: [
                 { color: "Untitled311_20261009184821.png", outline: "Untitled311_20261009184825.png" },
                 { color: "Untitled311_20261009184831.png", outline: "Untitled311_20261009184835.png" }
+            ]
+        };
+
+        // TÄPLÄ-ASSETIT
+        const spotAssets = {
+            body: [
+                { color: "Untitled311_20261009192240.png", outline: "Untitled311_20261009192246.png" },
+                { color: "Untitled311_20261009192251.png", outline: "Untitled311_20261009192256.png" }
+            ],
+            limbs: [
+                { color: "Untitled311_20261009192306.png", outline: "Untitled311_20261009192311.png" },
+                { color: "Untitled311_20261009192317.png", outline: "Untitled311_20261009192321.png" },
+                { color: null, outline: "Untitled311_20261009192326.png" }
+            ],
+            face: [
+                { color: "Untitled311_20261009192338.png", outline: "Untitled311_20261009192342.png" },
+                { color: null, outline: "Untitled311_20261009192347.png" }
+            ]
+        };
+
+        // OCELOT-ASSETIT
+        const ocelotAssets = {
+            body: [
+                { color: "Untitled311_20261009193037.png", outline: "Untitled311_20261009193045.png" },
+                { color: "Untitled311_20261009193050.png", outline: "Untitled311_20261009193055.png" }
+            ],
+            face: [
+                { color: "Untitled311_20261009193104.png", outline: "Untitled311_20261009193111.png" }
             ]
         };
 
@@ -480,6 +517,7 @@
             let pentuN = luoGenotyyppi(document.getElementById("isa_n").value, document.getElementById("ema_n").value);
             let pentuG = luoGenotyyppi(document.getElementById("isa_g").value, document.getElementById("ema_g").value);
             let pentuA = luoGenotyyppi(document.getElementById("isa_a").value, document.getElementById("ema_a").value, "A");
+            let pentuP = luoGenotyyppi(document.getElementById("isa_p").value, document.getElementById("ema_p").value);
             let pentuR = luoGenotyyppi(document.getElementById("isa_r").value, document.getElementById("ema_r").value);
             let pentuV = luoGenotyyppi(document.getElementById("isa_v").value, document.getElementById("ema_v").value);
 
@@ -487,13 +525,13 @@
             let pentuSkinColor = arvoVariVanhemmilta(document.getElementById("isa_skin").value.toUpperCase(), document.getElementById("ema_skin").value.toUpperCase());
             let pentuNose = Math.random() < 0.5 ? document.getElementById("isa_nose").value : document.getElementById("ema_nose").value;
 
-            currentGenotype = `${pentuM}_${pentuS}_${pentuC}_${pentuB}_${pentuH}_${pentuO}_${pentuN}_${pentuG}_${pentuA}_${pentuR}_${pentuV}`;
+            currentGenotype = `${pentuM}_${pentuS}_${pentuC}_${pentuB}_${pentuH}_${pentuO}_${pentuN}_${pentuG}_${pentuA}_${pentuP}_${pentuR}_${pentuV}`;
 
             let onkoHarja = pentuM.includes("M");
             let onkoKihara = (pentuC === "cc");
             let onkoGradient = (pentuG === "gg");
 
-            // Värit
+            // Turkin värit
             let tummaHSL = pentuB.includes("B") ? { h: 30, s: 5, l: 18 } : (pentuB === "bb" || pentuB === "bb1") ? { h: 25, s: 40, l: 25 } : { h: 20, s: 50, l: 40 };
             let harjaHSL = (pentuH.includes("H") && pentuH.includes("h")) ? { h: 25, s: 35, l: 25 } : (pentuH === "HH") ? { h: 30, s: 5, l: 15 } : { h: 35, s: 60, l: 70 };
             let punainenHSL = pentuO === "oo" ? { h: 38, s: 55, l: 78 } : { h: 20, s: 80, l: 50 };
@@ -515,25 +553,38 @@
                 }
             }
 
-            let onkoRaitoja = pentuR.includes("R");
-            let raitaLimbs = false, raitaBody = false, raitaFace = false;
+            // KUVIOTYYPIN VALINTALOGIIKKA (Ocelot = R_ + pp)
+            let onkoRaitaGeeni = pentuR.includes("R"); // R_
+            let onkoTaplaGeeni = (pentuP === "pp");    // pp
 
-            if (onkoRaitoja) {
+            let kuviotyyppi = "eikuviota";
+            if (onkoRaitaGeeni && onkoTaplaGeeni) {
+                kuviotyyppi = "ocelot"; // Molemmat esiintyvät samaan aikaan
+            } else if (onkoRaitaGeeni) {
+                kuviotyyppi = "raita";  // Vain raita
+            } else if (onkoTaplaGeeni) {
+                kuviotyyppi = "täplä";  // Vain täplä
+            }
+
+            // A-GEENI (Kuvioalueen rajoitus toimii kaikille kuviotyypeille)
+            let kuvioLimbs = false, kuvioBody = false, kuvioFace = false;
+            if (kuviotyyppi !== "eikuviota") {
                 if (pentuA.includes("A")) {
-                    raitaLimbs = true; raitaBody = true; raitaFace = true;
+                    kuvioLimbs = true; kuvioBody = true; kuvioFace = true;
                 } else if (pentuA === "aa" || pentuA === "aa1") {
-                    raitaLimbs = true; raitaFace = true;
+                    kuvioLimbs = true; kuvioFace = true;
                 } else if (pentuA === "a1a1") {
-                    raitaBody = true;
+                    kuvioBody = true;
                 }
             }
 
+            // V-GEENI (vv = läpikuultava 30% keskiosa)
             let onkoVarjo = (pentuV === "vv");
 
             document.getElementById("tulos").innerText = 
                 `Genotyyppi: ${currentGenotype}\n` +
                 `Silmät: ${pentuEyeColor} | Nahka: ${pentuSkinColor} | Nenä: ${pentuNose}\n` +
-                `S-Geeni: ${pentuS} | Raidat: ${onkoRaitoja ? (onkoVarjo ? "Vaalennetut raidat (vv)" : "Normaalit raidat") : "Ei raitoja"}`;
+                `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoVarjo ? "(vv vaalea keskus)" : ""}`;
 
             let karvanPohja = onkoKihara ? "Untitled309_20261008214953.png" : "Untitled309_20261008214944.png";
             let ihoTiedosto = onkoKihara ? "Untitled309_20261009185045.png" : earsAndPawsSkinFile;
@@ -555,9 +606,10 @@
                 noseViiva: noseData[pentuNose].lineart,
                 mouthLineart: mouthLinearts[Math.floor(Math.random() * mouthLinearts.length)],
                 earsAndPawsSkin: ihoTiedosto,
-                raitaLimbs: raitaLimbs,
-                raitaBody: raitaBody,
-                raitaFace: raitaFace,
+                kuviotyyppi: kuviotyyppi,
+                kuvioLimbs: kuvioLimbs,
+                kuvioBody: kuvioBody,
+                kuvioFace: kuvioFace,
                 onkoVarjo: onkoVarjo
             });
         }
@@ -577,9 +629,30 @@
             const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const selectedLimbsStripe = stripeAssets.limbs[Math.floor(Math.random() * stripeAssets.limbs.length)];
-            const selectedBodyStripe = stripeAssets.body[Math.floor(Math.random() * stripeAssets.body.length)];
-            const selectedFaceStripe = stripeAssets.face[Math.floor(Math.random() * stripeAssets.face.length)];
+            let selectedLimbsPattern = null, selectedBodyPattern = null, selectedFacePattern = null;
+
+            if (opts.kuviotyyppi === "raita") {
+                selectedLimbsPattern = stripeAssets.limbs[Math.floor(Math.random() * stripeAssets.limbs.length)];
+                selectedBodyPattern = stripeAssets.body[Math.floor(Math.random() * stripeAssets.body.length)];
+                selectedFacePattern = stripeAssets.face[Math.floor(Math.random() * stripeAssets.face.length)];
+            } else if (opts.kuviotyyppi === "täplä") {
+                selectedLimbsPattern = spotAssets.limbs[Math.floor(Math.random() * spotAssets.limbs.length)];
+                selectedBodyPattern = spotAssets.body[Math.floor(Math.random() * spotAssets.body.length)];
+                selectedFacePattern = spotAssets.face[Math.floor(Math.random() * spotAssets.face.length)];
+            } else if (opts.kuviotyyppi === "ocelot") {
+                // Ocelot yhdistää raita- ja täpläjalat (6 variaatiota)
+                const combinedLimbs = [...stripeAssets.limbs, ...spotAssets.limbs];
+                selectedLimbsPattern = combinedLimbs[Math.floor(Math.random() * combinedLimbs.length)];
+                selectedBodyPattern = ocelotAssets.body[Math.floor(Math.random() * ocelotAssets.body.length)];
+
+                // 50% Ocelot-kasvot, 50% raita/täpläkasvot
+                if (Math.random() < 0.5) {
+                    selectedFacePattern = ocelotAssets.face[0];
+                } else {
+                    const combinedFaces = [...stripeAssets.face, ...spotAssets.face];
+                    selectedFacePattern = combinedFaces[Math.floor(Math.random() * combinedFaces.length)];
+                }
+            }
 
             const [
                 imgPohja, imgPohjaHarja, imgViiva, imgViivaHarja, 
@@ -599,12 +672,12 @@
                 lataaKuva(opts.noseViiva),
                 lataaKuva(opts.mouthLineart),
                 lataaKuva(opts.earsAndPawsSkin),
-                opts.raitaLimbs ? lataaKuva(selectedLimbsStripe.color) : null,
-                opts.raitaLimbs ? lataaKuva(selectedLimbsStripe.outline) : null,
-                opts.raitaBody ? lataaKuva(selectedBodyStripe.color) : null,
-                opts.raitaBody ? lataaKuva(selectedBodyStripe.outline) : null,
-                opts.raitaFace ? lataaKuva(selectedFaceStripe.color) : null,
-                opts.raitaFace ? lataaKuva(selectedFaceStripe.outline) : null
+                (opts.kuvioLimbs && selectedLimbsPattern) ? lataaKuva(selectedLimbsPattern.color) : null,
+                (opts.kuvioLimbs && selectedLimbsPattern) ? lataaKuva(selectedLimbsPattern.outline) : null,
+                (opts.kuvioBody && selectedBodyPattern) ? lataaKuva(selectedBodyPattern.color) : null,
+                (opts.kuvioBody && selectedBodyPattern) ? lataaKuva(selectedBodyPattern.outline) : null,
+                (opts.kuvioFace && selectedFacePattern) ? lataaKuva(selectedFacePattern.color) : null,
+                (opts.kuvioFace && selectedFacePattern) ? lataaKuva(selectedFacePattern.outline) : null
             ]);
 
             // VAIHE 1: KEHO POHJAVÄRILLE
@@ -616,7 +689,7 @@
                 bodyCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
                 bodyCtx.globalCompositeOperation = "source-in";
 
-                // A) Turkin perusväri / SS-geenin pääväri
+                // A) Pohjaväri
                 if (opts.pentuS === "SS") {
                     bodyCtx.fillStyle = "#ffffff";
                     bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
@@ -633,65 +706,69 @@
                     }
                 }
 
-                // B) GRADIENTTI (Vaikuttaa vain pohjaväriin & kilpikonnalaikkuihin!)
+                // B) Gradientti
                 if (opts.onkoGradient) {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraGradient(bodyCtx, canvas.width, canvas.height);
                 }
 
-                // D) RAIDAT MASKAATTUINA ELÄIMEEN (Gradientin ja pohjavärin PÄÄLLE)
-                const centerOpacity = opts.onkoVarjo ? 0.30 : 0.85;
-
-                const baseHex = opts.kehoVari.startsWith("hsl") ? hslToHex(30, 10, 20) : opts.kehoVari;
-                const stripeCenterColor = tummennaVaria(baseHex, 0.4);
-                const stripeOutlineColor = tummennaVaria(baseHex, 0.15);
-
-                function piirraRaitaKankaalle(imgColor, imgOutline) {
-                    if (!imgColor || !imgOutline) return;
-                }
-                // C) VALKOISET LAIKUT (Ss/ss - Piirretään gradientin PÄÄLLE)
+                // C) Valkoiset laikut
                 if (opts.pentuS !== "SS" && opts.pentuS.includes("S")) {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 6);
-
-                    // Keskusta
-                    const tempColorCanvas = document.createElement("canvas");
-                    tempColorCanvas.width = canvas.width; tempColorCanvas.height = canvas.height;
-                    const tempColorCtx = tempColorCanvas.getContext("2d");
-
-                    tempColorCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
-                    tempColorCtx.globalCompositeOperation = "source-in";
-                    tempColorCtx.fillStyle = stripeCenterColor;
-                    tempColorCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    bodyCtx.save();
-                    bodyCtx.globalCompositeOperation = "source-atop";
-                    bodyCtx.globalAlpha = centerOpacity;
-                    bodyCtx.drawImage(tempColorCanvas, 0, 0);
-                    bodyCtx.restore();
-
-                    // Ääriviiva
-                    const tempOutlineCanvas = document.createElement("canvas");
-                    tempOutlineCanvas.width = canvas.width; tempOutlineCanvas.height = canvas.height;
-                    const tempOutlineCtx = tempOutlineCanvas.getContext("2d");
-
-                    tempOutlineCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
-                    tempOutlineCtx.globalCompositeOperation = "source-in";
-                    tempOutlineCtx.fillStyle = stripeOutlineColor;
-                    tempOutlineCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    bodyCtx.save();
-                    bodyCtx.globalCompositeOperation = "source-atop";
-                    bodyCtx.globalAlpha = 0.90;
-                    bodyCtx.drawImage(tempOutlineCanvas, 0, 0);
-                    bodyCtx.restore();
                 }
 
-                if (opts.raitaLimbs) piirraRaitaKankaalle(imgLimbsColor, imgLimbsOutline);
-                if (opts.raitaBody) piirraRaitaKankaalle(imgBodyColor, imgBodyOutline);
-                if (opts.raitaFace) piirraRaitaKankaalle(imgFaceColor, imgFaceOutline);
+                // D) KUVIOT (Raidat, Täplät tai Ocelot maskattuna)
+                const centerOpacity = opts.onkoVarjo ? 0.30 : 0.85; // vv = 30% läpikuultava keskusta
 
-                // Piirretään koko keho kankaalle
+                const baseHex = opts.kehoVari.startsWith("hsl") ? hslToHex(30, 10, 20) : opts.kehoVari;
+                const patternCenterColor = tummennaVaria(baseHex, 0.4);
+                const patternOutlineColor = tummennaVaria(baseHex, 0.15);
+
+                function piirraKuvioKankaalle(imgColor, imgOutline) {
+                    if (!imgColor && !imgOutline) return;
+
+                    // Keskusta (v-geeni säätää läpinäkyvyyttä)
+                    if (imgColor) {
+                        const tempColorCanvas = document.createElement("canvas");
+                        tempColorCanvas.width = canvas.width; tempColorCanvas.height = canvas.height;
+                        const tempColorCtx = tempColorCanvas.getContext("2d");
+
+                        tempColorCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
+                        tempColorCtx.globalCompositeOperation = "source-in";
+                        tempColorCtx.fillStyle = patternCenterColor;
+                        tempColorCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                        bodyCtx.save();
+                        bodyCtx.globalCompositeOperation = "source-atop";
+                        bodyCtx.globalAlpha = centerOpacity;
+                        bodyCtx.drawImage(tempColorCanvas, 0, 0);
+                        bodyCtx.restore();
+                    }
+
+                    // Ääriviiva / Täplien reuna
+                    if (imgOutline) {
+                        const tempOutlineCanvas = document.createElement("canvas");
+                        tempOutlineCanvas.width = canvas.width; tempOutlineCanvas.height = canvas.height;
+                        const tempOutlineCtx = tempOutlineCanvas.getContext("2d");
+
+                        tempOutlineCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
+                        tempOutlineCtx.globalCompositeOperation = "source-in";
+                        tempOutlineCtx.fillStyle = patternOutlineColor;
+                        tempOutlineCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                        bodyCtx.save();
+                        bodyCtx.globalCompositeOperation = "source-atop";
+                        bodyCtx.globalAlpha = 0.90;
+                        bodyCtx.drawImage(tempOutlineCanvas, 0, 0);
+                        bodyCtx.restore();
+                    }
+                }
+
+                if (opts.kuvioLimbs) piirraKuvioKankaalle(imgLimbsColor, imgLimbsOutline);
+                if (opts.kuvioBody) piirraKuvioKankaalle(imgBodyColor, imgBodyOutline);
+                if (opts.kuvioFace) piirraKuvioKankaalle(imgFaceColor, imgFaceOutline);
+
                 ctx.globalCompositeOperation = "source-over";
                 ctx.drawImage(bodyCanvas, 0, 0);
             }
@@ -700,7 +777,7 @@
             ctx.globalCompositeOperation = "source-over";
             if (imgViiva) ctx.drawImage(imgViiva, 0, 0, canvas.width, canvas.height);
 
-            // VAIHE 3: NAHKA (TASSUT + KORVAT + NENÄ - KARVAN PÄÄLLE, HARJAN ALLE)
+            // VAIHE 3: NAHKA (TASSUT + KORVAT + NENÄ)
             if (imgNoseSkin || imgEarsAndPawsSkin) {
                 const tempSkinCanvas = document.createElement("canvas");
                 tempSkinCanvas.width = canvas.width; tempSkinCanvas.height = canvas.height;
@@ -717,7 +794,7 @@
                 ctx.drawImage(tempSkinCanvas, 0, 0);
             }
 
-            // VAIHE 4: HARJA (PIIRRETÄÄN NAHKAN PÄÄLLE)
+            // VAIHE 4: HARJA
             if (imgPohjaHarja) {
                 const tempCanvas = document.createElement("canvas");
                 tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
