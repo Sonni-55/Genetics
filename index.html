@@ -8,7 +8,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 15px;
-            max-width: 680px;
+            max-width: 720px;
             margin: auto;
             background-color: #f4f4f9;
         }
@@ -19,9 +19,10 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             margin-bottom: 15px;
         }
+        /* Asetetaan geenivalikot kahteen tasoon / riviin (7 saraketta per rivi) */
         .grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(7, 1fr);
             gap: 6px 4px;
         }
         .grid-2 {
@@ -30,7 +31,7 @@
             gap: 8px;
         }
         label {
-            font-size: 9px;
+            font-size: 8px;
             font-weight: bold;
             display: block;
             margin-bottom: 2px;
@@ -112,6 +113,7 @@
         
         <h3>Isä</h3>
         <div class="grid">
+            <!-- RIVI 1 -->
             <div>
                 <label>M (Harja)</label>
                 <select id="isa_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
@@ -136,6 +138,10 @@
                 </select>
             </div>
             <div>
+                <label>D (Diluutio)</label>
+                <select id="isa_d"><option>DD</option><option selected>Dd</option><option>dd</option></select>
+            </div>
+            <div>
                 <label>H (H.Väri)</label>
                 <select id="isa_h"><option>HH</option><option selected>Hh</option><option>hh</option></select>
             </div>
@@ -143,6 +149,7 @@
                 <label>O (Puna)</label>
                 <select id="isa_o"><option selected>OO</option><option>Oo</option><option>oo</option></select>
             </div>
+            <!-- RIVI 2 -->
             <div>
                 <label>N (Kuvio)</label>
                 <select id="isa_n"><option>NN</option><option selected>Nn</option><option>nn</option></select>
@@ -174,6 +181,7 @@
                 <label>V (Varjo)</label>
                 <select id="isa_v"><option>VV</option><option selected>Vv</option><option>vv</option></select>
             </div>
+            <div></div>
         </div>
 
         <div style="margin-top: 10px;">
@@ -187,6 +195,7 @@
 
         <h3 style="margin-top: 15px;">Emä</h3>
         <div class="grid">
+            <!-- RIVI 1 -->
             <div>
                 <label>M (Harja)</label>
                 <select id="ema_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
@@ -211,6 +220,10 @@
                 </select>
             </div>
             <div>
+                <label>D (Diluutio)</label>
+                <select id="ema_d"><option>DD</option><option selected>Dd</option><option>dd</option></select>
+            </div>
+            <div>
                 <label>H (H.Väri)</label>
                 <select id="ema_h"><option>HH</option><option selected>Hh</option><option>hh</option></select>
             </div>
@@ -218,6 +231,7 @@
                 <label>O (Puna)</label>
                 <select id="ema_o"><option selected>OO</option><option>Oo</option><option>oo</option></select>
             </div>
+            <!-- RIVI 2 -->
             <div>
                 <label>N (Kuvio)</label>
                 <select id="ema_n"><option>NN</option><option selected>Nn</option><option>nn</option></select>
@@ -249,6 +263,7 @@
                 <label>V (Varjo)</label>
                 <select id="ema_v"><option>VV</option><option selected>Vv</option><option>vv</option></select>
             </div>
+            <div></div>
         </div>
 
         <div style="margin-top: 10px;">
@@ -499,6 +514,7 @@
             let pentuS = luoGenotyyppi(document.getElementById("isa_s").value, document.getElementById("ema_s").value);
             let pentuC = luoGenotyyppi(document.getElementById("isa_c").value, document.getElementById("ema_c").value);
             let pentuB = luoGenotyyppi(document.getElementById("isa_b").value, document.getElementById("ema_b").value, "B");
+            let pentuD = luoGenotyyppi(document.getElementById("isa_d").value, document.getElementById("ema_d").value); // UUSI D-GEENI
             let pentuH = luoGenotyyppi(document.getElementById("isa_h").value, document.getElementById("ema_h").value);
             let pentuO = luoGenotyyppi(document.getElementById("isa_o").value, document.getElementById("ema_o").value);
             let pentuN = luoGenotyyppi(document.getElementById("isa_n").value, document.getElementById("ema_n").value);
@@ -512,15 +528,29 @@
             let pentuSkinColor = arvoVariVanhemmilta(document.getElementById("isa_skin").value.toUpperCase(), document.getElementById("ema_skin").value.toUpperCase());
             let pentuNose = Math.random() < 0.5 ? document.getElementById("isa_nose").value : document.getElementById("ema_nose").value;
 
-            currentGenotype = `${pentuM}_${pentuS}_${pentuC}_${pentuB}_${pentuH}_${pentuO}_${pentuN}_${pentuG}_${pentuA}_${pentuP}_${pentuR}_${pentuV}`;
+            currentGenotype = `${pentuM}_${pentuS}_${pentuC}_${pentuB}_${pentuD}_${pentuH}_${pentuO}_${pentuN}_${pentuG}_${pentuA}_${pentuP}_${pentuR}_${pentuV}`;
 
             let onkoHarja = pentuM.includes("M");
             let onkoKihara = (pentuC === "cc");
             let onkoGradient = (pentuG === "gg");
+            let onkoDiluutio = (pentuD === "dd"); // dd = haalistus aktiivinen
 
-            let tummaHSL = pentuB.includes("B") ? { h: 30, s: 5, l: 18 } : (pentuB === "bb" || pentuB === "bb1") ? { h: 25, s: 40, l: 25 } : { h: 20, s: 50, l: 40 };
+            // DILUUTIOLOGIIKKA (B-geenin värien mukauttaminen dd-muodossa)
+            let tummaHSL;
+            if (onkoDiluutio) {
+                // Haalistetut sävyt (dd): Sininen (harmaa), Lila, Fawn
+                tummaHSL = pentuB.includes("B") ? { h: 210, s: 15, l: 45 } : (pentuB === "bb" || pentuB === "bb1") ? { h: 280, s: 12, l: 50 } : { h: 30, s: 25, l: 65 };
+            } else {
+                // Normaali pigmentti (D_): Musta, Suklaa, Kaneli
+                tummaHSL = pentuB.includes("B") ? { h: 30, s: 5, l: 18 } : (pentuB === "bb" || pentuB === "bb1") ? { h: 25, s: 40, l: 25 } : { h: 20, s: 50, l: 40 };
+            }
+
             let harjaHSL = (pentuH.includes("H") && pentuH.includes("h")) ? { h: 25, s: 35, l: 25 } : (pentuH === "HH") ? { h: 30, s: 5, l: 15 } : { h: 35, s: 60, l: 70 };
-            let punainenHSL = pentuO === "oo" ? { h: 38, s: 55, l: 78 } : { h: 20, s: 80, l: 50 };
+            
+            // Punainen geeni: O-geenin punainen haalistuu kermaksi dd-muodossa
+            let punainenHSL = pentuO === "oo" 
+                ? (onkoDiluutio ? { h: 42, s: 45, l: 85 } : { h: 38, s: 55, l: 78 })
+                : (onkoDiluutio ? { h: 30, s: 60, l: 70 } : { h: 20, s: 80, l: 50 });
 
             let variTumma = varioiHSL(tummaHSL.h, tummaHSL.s, tummaHSL.l);
             let variPunainen = varioiHSL(punainenHSL.h, punainenHSL.s, punainenHSL.l);
@@ -535,7 +565,7 @@
                 paavari = variPunainen;
                 onkoPunainenNakyy = true;
             } else {
-                onkoPunainenNakyy = true; // Calicossa punaista näkyy aina
+                onkoPunainenNakyy = true;
                 if (Math.random() < 0.5) {
                     paavari = variPunainen; laikkavari = variTumma;
                 } else {
@@ -543,18 +573,17 @@
                 }
             }
 
-            // HARJAN VÄRILOGIIKKA: Punainen geeni & S-geeni
+            // HARJAN VÄRI: Punainen geeni & S-geeni
             if (onkoPunainenNakyy && Math.random() < 0.5) {
-                // Punainen teema harjalle
                 if (pentuH === "hh") {
-                    variHarja = "#fce8a4"; // Vaalea keltainen
+                    variHarja = "#fce8a4";
                 } else {
-                    variHarja = varioiHSL(20, 80, 50); // Punainen
+                    variHarja = onkoDiluutio ? varioiHSL(30, 60, 70) : varioiHSL(20, 80, 50);
                 }
             }
 
             if (pentuS.includes("S") && Math.random() < 0.33) {
-                variHarja = "#ffffff"; // Valkoinen harja
+                variHarja = "#ffffff";
             }
 
             let onkoRaitaGeeni = pentuR.includes("R");
@@ -586,15 +615,15 @@
             let centerOpacity = 1.0; 
             let onkoVarjo = (pentuV === "vv");
             if (onkoVarjo) {
-                centerOpacity = 0.50 + Math.random() * 0.40; // 50 - 90%
+                centerOpacity = 0.50 + Math.random() * 0.40;
             } else {
-                centerOpacity = 0.91 + Math.random() * 0.09; // 91 - 100%
+                centerOpacity = 0.91 + Math.random() * 0.09;
             }
 
             document.getElementById("tulos").innerText = 
                 `Genotyyppi: ${currentGenotype}\n` +
                 `Silmät: ${pentuEyeColor} | Nahka: ${pentuSkinColor} | Nenä: ${pentuNose}\n` +
-                `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoVarjo ? "(vv vaalea keskus)" : ""}`;
+                `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} ${onkoVarjo ? "(vv vaalea keskus)" : ""}`;
 
             let karvanPohja = onkoKihara ? "Untitled309_20261008214953.png" : "Untitled309_20261008214944.png";
             let ihoTiedosto = onkoKihara ? "Untitled309_20261009185045.png" : earsAndPawsSkinFile;
@@ -636,15 +665,14 @@
             });
         }
 
-        // Apufunktio: Pakotetaan pikselit täysin 100% peittäviksi (Threshold)
         function teeTaysinPeittavaksi(canvasCtx, width, height) {
             let imgData = canvasCtx.getImageData(0, 0, width, height);
             let data = imgData.data;
             for (let i = 3; i < data.length; i += 4) {
                 if (data[i] > 20) {
-                    data[i] = 255; // Täysi opasiteetti
+                    data[i] = 255;
                 } else {
-                    data[i] = 0;   // Läpinäkyvä
+                    data[i] = 0;
                 }
             }
             canvasCtx.putImageData(imgData, 0, 0);
@@ -731,7 +759,7 @@
                     piirraGradient(bodyCtx, canvas.width, canvas.height);
                 }
 
-                // C) KUVIOT (Saumaton yhdistäminen ilman leviäviä reunoja)
+                // C) KUVIOT (Dynaaminen tummennus pohjaväristä)
                 function parseToRgb(colorStr) {
                     if (colorStr.startsWith("hsl")) {
                         let dummy = document.createElement("div");
@@ -752,7 +780,6 @@
                 let patternCenterColor = `rgb(${Math.round(baseRgb.r * centerFactor)}, ${Math.round(baseRgb.g * centerFactor)}, ${Math.round(baseRgb.b * centerFactor)})`;
                 let patternOutlineColor = `rgb(${Math.round(baseRgb.r * outlineFactor)}, ${Math.round(baseRgb.g * outlineFactor)}, ${Math.round(baseRgb.b * outlineFactor)})`;
 
-                // Luodaan väliaikaiset kankaat kuvioiden keräämiseksi
                 const combinedCenterCanvas = document.createElement("canvas");
                 combinedCenterCanvas.width = canvas.width; combinedCenterCanvas.height = canvas.height;
                 const combinedCenterCtx = combinedCenterCanvas.getContext("2d");
@@ -785,7 +812,7 @@
                 bodyCtx.drawImage(combinedCenterCanvas, 0, 0);
                 bodyCtx.restore();
 
-                // 2. Ääriviivat (Threshold pakottaa paksut peittävät reunat ilman leviäviä pehmeitä reunoja)
+                // 2. Ääriviivat
                 teeTaysinPeittavaksi(combinedOutlineCtx, canvas.width, canvas.height);
                 combinedOutlineCtx.globalCompositeOperation = "source-in";
                 combinedOutlineCtx.fillStyle = patternOutlineColor;
@@ -793,11 +820,11 @@
 
                 bodyCtx.save();
                 bodyCtx.globalCompositeOperation = "multiply";
-                bodyCtx.globalAlpha = 1.0; // Pysyy aina 100%
+                bodyCtx.globalAlpha = 1.0;
                 bodyCtx.drawImage(combinedOutlineCanvas, 0, 0);
                 bodyCtx.restore();
 
-                // D) VALKOISET LAIKUT (Korjattu SS-geeni: Ei tee kokovalkoista, vaan isoja laikkuja)
+                // D) VALKOISET LAIKUT (SS-geeni)
                 if (opts.pentuS === "SS") {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 14);
@@ -806,8 +833,8 @@
                     piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 6);
                 }
 
-                // EIKÄ päästetä mitään kuvioita kehon ulkopuolelle!
-                bodyCtx.globalCompositeOperation = "destination-in";
+                // EIKÄ päästetä kuvioita ääriviivojen yli
+                bodyCtx.globalCompositeOperation = "destination-out";
                 bodyCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
 
                 ctx.globalCompositeOperation = "source-over";
