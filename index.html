@@ -231,6 +231,15 @@
     </div>
 
     <script>
+        // Eye lineart variations
+        const eyeLinearts = [
+            "Untitled309_20261009091214.png",
+            "Untitled309_20261009091209.png",
+            "Untitled309_20261009091204.png",
+            "Untitled309_20261008221019.png",
+            "Untitled309_20261008221015.png"
+        ];
+
         // Color sync functionality
         document.getElementById("isa_eyes").addEventListener("input", (e) => {
             document.getElementById("isa_eyes_hex").value = e.target.value.toUpperCase();
@@ -273,6 +282,10 @@
             const blendedG = Math.round((rgb1.g + rgb2.g) / 2);
             const blendedB = Math.round((rgb1.b + rgb2.b) / 2);
             return rgbToHex(blendedR, blendedG, blendedB);
+        }
+
+        function getRandomEyeLineart() {
+            return eyeLinearts[Math.floor(Math.random() * eyeLinearts.length)];
         }
 
         function arvoAlleeli(genotyyppi) {
@@ -427,6 +440,7 @@
             let isaEyeColor = document.getElementById("isa_eyes").value.toUpperCase();
             let emaEyeColor = document.getElementById("ema_eyes").value.toUpperCase();
             let pentuEyeColor = blendColors(isaEyeColor, emaEyeColor);
+            let selectedEyeLineart = getRandomEyeLineart();
 
             // 2. Arvo pennun genotyypit
             let pentuM = luoGenotyyppi(isaM, emaM);
@@ -543,7 +557,7 @@
                 `Ominaisuudet: ${harjaTeksti}, Keho: ${kehoTeksti}`;
 
             // 6. Piirto
-            piirraErillinenHarjaPentu(pohjaTiedosto, pohjaHarjaTiedosto, viivaTiedosto, viivaHarjaTiedosto, paavari, laikkavari, variHarja, valkoistenMaara, onkoBrindle, onkoGradient, pentuEyeColor);
+            piirraErillinenHarjaPentu(pohjaTiedosto, pohjaHarjaTiedosto, viivaTiedosto, viivaHarjaTiedosto, paavari, laikkavari, variHarja, valkoistenMaara, onkoBrindle, onkoGradient, pentuEyeColor, selectedEyeLineart);
         }
 
         function lataaKuva(url) {
@@ -556,17 +570,18 @@
             });
         }
 
-        async function piirraErillinenHarjaPentu(pohja, pohjaHarja, viiva, viivaHarja, kehoVari, laikkavari, harjaVari, valkoistenMaara, onkoBrindle, onkoGradient, eyeColor) {
+        async function piirraErillinenHarjaPentu(pohja, pohjaHarja, viiva, viivaHarja, kehoVari, laikkavari, harjaVari, valkoistenMaara, onkoBrindle, onkoGradient, eyeColor, eyeLineart) {
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const [imgPohja, imgPohjaHarja, imgViiva, imgViivaHarja, imgSilmät] = await Promise.all([
+            const [imgPohja, imgPohjaHarja, imgViiva, imgViivaHarja, imgSilmät, imgSilmätLineArt] = await Promise.all([
                 lataaKuva(pohja),
                 lataaKuva(pohjaHarja),
                 lataaKuva(viiva),
                 lataaKuva(viivaHarja),
-                lataaKuva("Untitled309_20261008221009.png")
+                lataaKuva("Untitled309_20261008221009.png"),
+                lataaKuva(eyeLineart)
             ]);
 
             // VAIHE 1: KEHO (Pohjaväri + Calico-laikut + Brindle + Gradient + Valkoinen)
@@ -631,7 +646,7 @@
                 ctx.drawImage(imgViivaHarja, 0, 0, canvas.width, canvas.height);
             }
 
-            // VAIHE 5: SILMIEN VÄRI
+            // VAIHE 5: SILMIEN POHJAVÄRI
             if (imgSilmät) {
                 const tempEyeCanvas = document.createElement("canvas");
                 tempEyeCanvas.width = canvas.width;
@@ -645,6 +660,12 @@
 
                 ctx.globalCompositeOperation = "source-over";
                 ctx.drawImage(tempEyeCanvas, 0, 0);
+            }
+
+            // VAIHE 6: SILMIEN LINEART (Randomized on top of eye color)
+            if (imgSilmätLineArt) {
+                ctx.globalCompositeOperation = "source-over";
+                ctx.drawImage(imgSilmätLineArt, 0, 0, canvas.width, canvas.height);
             }
         }
 
