@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
@@ -19,7 +19,6 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             margin-bottom: 15px;
         }
-        /* Asetetaan geenivalikot kahteen tasoon / riviin (6 saraketta per rivi) */
         .grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
@@ -113,7 +112,6 @@
         
         <h3>Isä</h3>
         <div class="grid">
-            <!-- RIVI 1 -->
             <div>
                 <label>M (Harja)</label>
                 <select id="isa_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
@@ -145,7 +143,6 @@
                 <label>O (Puna)</label>
                 <select id="isa_o"><option selected>OO</option><option>Oo</option><option>oo</option></select>
             </div>
-            <!-- RIVI 2 -->
             <div>
                 <label>N (Kuvio)</label>
                 <select id="isa_n"><option>NN</option><option selected>Nn</option><option>nn</option></select>
@@ -190,7 +187,6 @@
 
         <h3 style="margin-top: 15px;">Emä</h3>
         <div class="grid">
-            <!-- RIVI 1 -->
             <div>
                 <label>M (Harja)</label>
                 <select id="ema_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
@@ -222,7 +218,6 @@
                 <label>O (Puna)</label>
                 <select id="ema_o"><option selected>OO</option><option>Oo</option><option>oo</option></select>
             </div>
-            <!-- RIVI 2 -->
             <div>
                 <label>N (Kuvio)</label>
                 <select id="ema_n"><option>NN</option><option selected>Nn</option><option>nn</option></select>
@@ -532,16 +527,34 @@
             let variHarja = varioiHSL(harjaHSL.h, harjaHSL.s, harjaHSL.l);
 
             let paavari = "", laikkavari = null;
+            let onkoPunainenNakyy = false;
+
             if (pentuN === "NN") {
                 paavari = variTumma;
             } else if (pentuN === "nn") {
                 paavari = variPunainen;
+                onkoPunainenNakyy = true;
             } else {
+                onkoPunainenNakyy = true; // Calicossa punaista näkyy aina
                 if (Math.random() < 0.5) {
                     paavari = variPunainen; laikkavari = variTumma;
                 } else {
                     paavari = variTumma; laikkavari = variPunainen;
                 }
+            }
+
+            // HARJAN VÄRILOGIIKKA: Punainen geeni & S-geeni
+            if (onkoPunainenNakyy && Math.random() < 0.5) {
+                // Punainen teema harjalle
+                if (pentuH === "hh") {
+                    variHarja = "#fce8a4"; // Vaalea keltainen
+                } else {
+                    variHarja = varioiHSL(20, 80, 50); // Punainen
+                }
+            }
+
+            if (pentuS.includes("S") && Math.random() < 0.33) {
+                variHarja = "#ffffff"; // Valkoinen harja
             }
 
             let onkoRaitaGeeni = pentuR.includes("R");
@@ -573,7 +586,9 @@
             let centerOpacity = 1.0; 
             let onkoVarjo = (pentuV === "vv");
             if (onkoVarjo) {
-                centerOpacity = 0.30 + Math.random() * 0.50;
+                centerOpacity = 0.50 + Math.random() * 0.40; // 50 - 90%
+            } else {
+                centerOpacity = 0.91 + Math.random() * 0.09; // 91 - 100%
             }
 
             document.getElementById("tulos").innerText = 
@@ -620,7 +635,22 @@
                 img.src = url;
             });
         }
-                async function piirraErillinenHarjaPentu(opts) {
+
+        // Apufunktio: Pakotetaan pikselit täysin 100% peittäviksi (Threshold)
+        function teeTaysinPeittavaksi(canvasCtx, width, height) {
+            let imgData = canvasCtx.getImageData(0, 0, width, height);
+            let data = imgData.data;
+            for (let i = 3; i < data.length; i += 4) {
+                if (data[i] > 20) {
+                    data[i] = 255; // Täysi opasiteetti
+                } else {
+                    data[i] = 0;   // Läpinäkyvä
+                }
+            }
+            canvasCtx.putImageData(imgData, 0, 0);
+        }
+
+        async function piirraErillinenHarjaPentu(opts) {
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -701,7 +731,7 @@
                     piirraGradient(bodyCtx, canvas.width, canvas.height);
                 }
 
-                // C) KUVIOT (Yhdistetään ensin saumattomaksi kerrokseksi)
+                // C) KUVIOT (Saumaton yhdistäminen ilman leviäviä reunoja)
                 function parseToRgb(colorStr) {
                     if (colorStr.startsWith("hsl")) {
                         let dummy = document.createElement("div");
@@ -716,17 +746,13 @@
                 }
 
                 let baseRgb = parseToRgb(opts.kehoVari);
-
                 let centerFactor = 0.40 + Math.random() * 0.30; 
                 let outlineFactor = 0.15 + Math.random() * 0.20;
 
                 let patternCenterColor = `rgb(${Math.round(baseRgb.r * centerFactor)}, ${Math.round(baseRgb.g * centerFactor)}, ${Math.round(baseRgb.b * centerFactor)})`;
                 let patternOutlineColor = `rgb(${Math.round(baseRgb.r * outlineFactor)}, ${Math.round(baseRgb.g * outlineFactor)}, ${Math.round(baseRgb.b * outlineFactor)})`;
 
-                // V-geenin mukainen keskustan opasiteetti: V_ = 91-100%, vv = 50-90%
-                let centerOpacity = opts.onkoVarjo ? (0.50 + Math.random() * 0.40) : (0.91 + Math.random() * 0.09);
-
-                // Luo kaksi kokoavaa kangasta (Keskustat ja Reunat erikseen), jotta päällekkäisyyskohdat eivät tummene kaksinkertaisesti!
+                // Luodaan väliaikaiset kankaat kuvioiden keräämiseksi
                 const combinedCenterCanvas = document.createElement("canvas");
                 combinedCenterCanvas.width = canvas.width; combinedCenterCanvas.height = canvas.height;
                 const combinedCenterCtx = combinedCenterCanvas.getContext("2d");
@@ -748,40 +774,41 @@
                     if (imgExtraKuono)  lisaaKuvioKokoelmaan(imgExtraKuono, null);
                 }
 
-                // 1. Piirretään yhdistetty keskustakuvio (VV = 91-100%, vv = 50-90%)
+                // 1. Keskusta
                 combinedCenterCtx.globalCompositeOperation = "source-in";
                 combinedCenterCtx.fillStyle = patternCenterColor;
                 combinedCenterCtx.fillRect(0, 0, canvas.width, canvas.height);
 
                 bodyCtx.save();
                 bodyCtx.globalCompositeOperation = "multiply";
-                bodyCtx.globalAlpha = centerOpacity;
+                bodyCtx.globalAlpha = opts.centerOpacity;
                 bodyCtx.drawImage(combinedCenterCanvas, 0, 0);
                 bodyCtx.restore();
 
-                // 2. Piirretään yhdistetty reuna/ääriviiva (Aina 100% peittävä)
+                // 2. Ääriviivat (Threshold pakottaa paksut peittävät reunat ilman leviäviä pehmeitä reunoja)
+                teeTaysinPeittavaksi(combinedOutlineCtx, canvas.width, canvas.height);
                 combinedOutlineCtx.globalCompositeOperation = "source-in";
                 combinedOutlineCtx.fillStyle = patternOutlineColor;
                 combinedOutlineCtx.fillRect(0, 0, canvas.width, canvas.height);
 
                 bodyCtx.save();
                 bodyCtx.globalCompositeOperation = "multiply";
-                bodyCtx.globalAlpha = 1.0; // Ääriviivat pysyvät aina 100%
+                bodyCtx.globalAlpha = 1.0; // Pysyy aina 100%
                 bodyCtx.drawImage(combinedOutlineCanvas, 0, 0);
                 bodyCtx.restore();
 
-                // D) VALKOISET LAIKUT (Ss/SS - Piirretään kuvioiden PÄÄLLE!)
+                // D) VALKOISET LAIKUT (Korjattu SS-geeni: Ei tee kokovalkoista, vaan isoja laikkuja)
                 if (opts.pentuS === "SS") {
                     bodyCtx.globalCompositeOperation = "source-atop";
-                    bodyCtx.fillStyle = "#ffffff";
-                    bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    bodyCtx.globalCompositeOperation = "destination-out";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#000000", 12);
+                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 14);
                 } else if (opts.pentuS.includes("S")) {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 6);
                 }
+
+                // EIKÄ päästetä mitään kuvioita kehon ulkopuolelle!
+                bodyCtx.globalCompositeOperation = "destination-in";
+                bodyCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
 
                 ctx.globalCompositeOperation = "source-over";
                 ctx.drawImage(bodyCanvas, 0, 0);
@@ -843,7 +870,7 @@
             // VAIHE 6: NENÄ JA SUU LINEART
             if (imgNoseViiva) ctx.drawImage(imgNoseViiva, 0, 0, canvas.width, canvas.height);
             if (imgMouthLineart) ctx.drawImage(imgMouthLineart, 0, 0, canvas.width, canvas.height);
-          }
+        }
 
         function lataaKuvaLaitteelle() {
             const canvas = document.getElementById("canvas");
