@@ -8,7 +8,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 15px;
-            max-width: 520px;
+            max-width: 580px;
             margin: auto;
             background-color: #f4f4f9;
         }
@@ -21,11 +21,11 @@
         }
         .grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(9, 1fr);
             gap: 4px;
         }
         label {
-            font-size: 10px;
+            font-size: 9px;
             font-weight: bold;
             display: block;
             margin-bottom: 2px;
@@ -33,10 +33,10 @@
         }
         select {
             width: 100%;
-            padding: 6px 1px;
+            padding: 5px 0px;
             border-radius: 6px;
             border: 1px solid #ccc;
-            font-size: 11px;
+            font-size: 10px;
         }
         button {
             width: 100%;
@@ -82,7 +82,7 @@
                 <select id="isa_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
             </div>
             <div>
-                <label>S (Valkoinen)</label>
+                <label>S (Valk.)</label>
                 <select id="isa_s"><option>SS</option><option selected>Ss</option><option>ss</option></select>
             </div>
             <div>
@@ -112,6 +112,14 @@
                 <label>N (Kuvio)</label>
                 <select id="isa_n"><option>NN</option><option selected>Nn</option><option>nn</option></select>
             </div>
+            <div>
+                <label>T (Raidat)</label>
+                <select id="isa_t"><option>TT</option><option selected>Tt</option><option>tt</option></select>
+            </div>
+            <div>
+                <label>G (Grad.)</label>
+                <select id="isa_g"><option>GG</option><option selected>Gg</option><option>gg</option></select>
+            </div>
         </div>
 
         <h3>Emä</h3>
@@ -121,7 +129,7 @@
                 <select id="ema_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
             </div>
             <div>
-                <label>S (Valkoinen)</label>
+                <label>S (Valk.)</label>
                 <select id="ema_s"><option>SS</option><option selected>Ss</option><option>ss</option></select>
             </div>
             <div>
@@ -150,6 +158,14 @@
             <div>
                 <label>N (Kuvio)</label>
                 <select id="ema_n"><option>NN</option><option selected>Nn</option><option>nn</option></select>
+            </div>
+            <div>
+                <label>T (Raidat)</label>
+                <select id="ema_t"><option>TT</option><option selected>Tt</option><option>tt</option></select>
+            </div>
+            <div>
+                <label>G (Grad.)</label>
+                <select id="ema_g"><option>GG</option><option selected>Gg</option><option>gg</option></select>
             </div>
         </div>
 
@@ -234,6 +250,61 @@
             }
         }
 
+        // --- BRINDLE-RAITOJEN PIIRTO ---
+        function piirraBrindleRaidat(ctx, width, height) {
+            ctx.save();
+            // Raitojen opasiteetti 40% - 100%
+            ctx.globalAlpha = 0.4 + Math.random() * 0.6;
+            ctx.fillStyle = "#000000";
+
+            let raitojenMaara = 25 + Math.floor(Math.random() * 20);
+            for (let i = 0; i < raitojenMaara; i++) {
+                let x = Math.random() * width;
+                let y = Math.random() * height;
+                let pituus = 150 + Math.random() * 300;
+                let paksuus = 8 + Math.random() * 20;
+
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                // Käännetään raitoja pystypainotteisesti pienen aaltoilun kera
+                ctx.bezierCurveTo(
+                    x + (Math.random() * 40 - 20), y + pituus * 0.3,
+                    x + (Math.random() * 60 - 30), y + pituus * 0.7,
+                    x + (Math.random() * 20 - 10), y + pituus
+                );
+                ctx.lineWidth = paksuus;
+                ctx.strokeStyle = "#000000";
+                ctx.lineCap = "round";
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        // --- GRADIENTIN PIIRTO ---
+        function piirraGradient(ctx, width, height) {
+            ctx.save();
+            // Satunnainen kulma/suunta gradientille
+            let x1 = Math.random() * width;
+            let y1 = Math.random() * height;
+            let x2 = Math.random() * width;
+            let y2 = Math.random() * height;
+
+            let grad = ctx.createLinearGradient(x1, y1, x2, y2);
+            
+            // Arvotaan onko liukuväri tummentava vaiko vaalentava
+            if (Math.random() < 0.5) {
+                grad.addColorStop(0, "rgba(0, 0, 0, 0.4)");
+                grad.addColorStop(1, "rgba(0, 0, 0, 0.0)");
+            } else {
+                grad.addColorStop(0, "rgba(255, 255, 255, 0.45)");
+                grad.addColorStop(1, "rgba(255, 255, 255, 0.0)");
+            }
+
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+            ctx.restore();
+        }
+
         function arvoPentu() {
             // 1. Lue valikot
             let isaM = document.getElementById("isa_m").value;
@@ -243,6 +314,8 @@
             let isaH = document.getElementById("isa_h").value;
             let isaO = document.getElementById("isa_o").value;
             let isaN = document.getElementById("isa_n").value;
+            let isaT = document.getElementById("isa_t").value;
+            let isaG = document.getElementById("isa_g").value;
 
             let emaM = document.getElementById("ema_m").value;
             let emaS = document.getElementById("ema_s").value;
@@ -251,6 +324,8 @@
             let emaH = document.getElementById("ema_h").value;
             let emaO = document.getElementById("ema_o").value;
             let emaN = document.getElementById("ema_n").value;
+            let emaT = document.getElementById("ema_t").value;
+            let emaG = document.getElementById("ema_g").value;
 
             // 2. Arvo pennun genotyypit
             let pentuM = luoGenotyyppi(isaM, emaM);
@@ -260,16 +335,21 @@
             let pentuH = luoGenotyyppi(isaH, emaH);
             let pentuO = luoGenotyyppi(isaO, emaO);
             let pentuN = luoGenotyyppi(isaN, emaN);
+            let pentuT = luoGenotyyppi(isaT, emaT);
+            let pentuG = luoGenotyyppi(isaG, emaG);
 
             // Valkoisten laikkujen määrä
             let valkoistenMaara = 0;
             if (pentuS === "SS") valkoistenMaara = 18;
             else if (pentuS.includes("S")) valkoistenMaara = 6;
 
-            // 3. Määritä fenotyypit
+            // Ominaisuudet
             let onkoHarja = pentuM.includes("M");
             let onkoKihara = (pentuC === "cc");
+            let onkoBrindle = pentuT.includes("T");
+            let onkoGradient = (pentuG === "gg");
 
+            // 3. Määritä fenotyypit
             let tummaHSL, tummaNimi;
             if (pentuB.includes("B")) {
                 tummaHSL = { h: 30, s: 5, l: 18 };
@@ -294,9 +374,15 @@
                 harjaNimi = "Vaalea harja";
             }
 
-            let punainenHSL = (pentuO === "oo") 
-                ? { h: 32, s: 60, l: 75 } 
-                : { h: 20, s: 80, l: 50 };
+            // OO/Oo = Punainen, oo = Kermankeltainen (Dilute punainen)
+            let punainenHSL, punainenNimi;
+            if (pentuO === "oo") {
+                punainenHSL = { h: 38, s: 55, l: 78 };
+                punainenNimi = "Kermankeltainen";
+            } else {
+                punainenHSL = { h: 20, s: 80, l: 50 };
+                punainenNimi = "Punainen";
+            }
 
             let variTumma = varioiHSL(tummaHSL.h, tummaHSL.s, tummaHSL.l);
             let variPunainen = varioiHSL(punainenHSL.h, punainenHSL.s, punainenHSL.l);
@@ -306,15 +392,13 @@
             let laikkavari = null;
             let kehoTeksti = "";
 
-            // N-geenin käsittely (NN = Tumma, nn = Punainen, Nn/nN = Kilpikonna)
             if (pentuN === "NN") {
                 paavari = variTumma;
                 kehoTeksti = tummaNimi;
             } else if (pentuN === "nn") {
                 paavari = variPunainen;
-                kehoTeksti = "Punainen";
+                kehoTeksti = punainenNimi;
             } else {
-                // Kilpikonna: arvotaan kumpiko väri on pohjalla ja kumpiko täplinä
                 if (Math.random() < 0.5) {
                     paavari = variPunainen;
                     laikkavari = variTumma;
@@ -322,7 +406,14 @@
                     paavari = variTumma;
                     laikkavari = variPunainen;
                 }
-                kehoTeksti = `Kilpikonnakuvio (${tummaNimi} / Punainen)`;
+                kehoTeksti = `Kilpikonnakuvio (${tummaNimi} / ${punainenNimi})`;
+            }
+
+            if (onkoBrindle) {
+                kehoTeksti += " + Brindle";
+            }
+            if (onkoGradient) {
+                kehoTeksti += " + Gradient";
             }
 
             // 4. Kuvatiedostot
@@ -346,11 +437,11 @@
             let harjaTeksti = onkoHarja ? `Harja (${harjaNimi})` : "Ei harjaa";
 
             document.getElementById("tulos").innerText = 
-                `Genotyyppi: ${pentuM} / ${pentuS} / ${pentuC} / ${pentuB} / ${pentuH} / ${pentuO} / ${pentuN}\n` +
+                `Genotyyppi: ${pentuM} / ${pentuS} / ${pentuC} / ${pentuB} / ${pentuH} / ${pentuO} / ${pentuN} / ${pentuT} / ${pentuG}\n` +
                 `Ominaisuudet: ${harjaTeksti}, Keho: ${kehoTeksti}`;
 
             // 6. Piirto
-            piirraErillinenHarjaPentu(pohjaTiedosto, pohjaHarjaTiedosto, viivaTiedosto, viivaHarjaTiedosto, paavari, laikkavari, variHarja, valkoistenMaara);
+            piirraErillinenHarjaPentu(pohjaTiedosto, pohjaHarjaTiedosto, viivaTiedosto, viivaHarjaTiedosto, paavari, laikkavari, variHarja, valkoistenMaara, onkoBrindle, onkoGradient);
         }
 
         function lataaKuva(url) {
@@ -363,7 +454,7 @@
             });
         }
 
-        async function piirraErillinenHarjaPentu(pohja, pohjaHarja, viiva, viivaHarja, kehoVari, laikkavari, harjaVari, valkoistenMaara) {
+        async function piirraErillinenHarjaPentu(pohja, pohjaHarja, viiva, viivaHarja, kehoVari, laikkavari, harjaVari, valkoistenMaara, onkoBrindle, onkoGradient) {
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -375,7 +466,7 @@
                 lataaKuva(viivaHarja)
             ]);
 
-            // VAIHE 1: KEHO (Pohjaväri + laikut + valkoinen)
+            // VAIHE 1: KEHO (Pohjaväri + Calico-laikut + Brindle + Gradient + Valkoinen)
             if (imgPohja) {
                 ctx.globalCompositeOperation = "source-over";
                 ctx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
@@ -384,24 +475,38 @@
                 ctx.fillStyle = kehoVari;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+                // A) Calico-laikut
                 if (laikkavari) {
                     ctx.globalCompositeOperation = "source-atop";
                     piirraCalicoLaikut(ctx, canvas.width, canvas.height, laikkavari, 10);
                 }
 
+                // B) Brindle-raidat (Calicon PÄÄLLE)
+                if (onkoBrindle) {
+                    ctx.globalCompositeOperation = "source-atop";
+                    piirraBrindleRaidat(ctx, canvas.width, canvas.height);
+                }
+
+                // C) Gradient (Brindlen ja Calicon PÄÄLLE, mutta valkoisen ALLE)
+                if (onkoGradient) {
+                    ctx.globalCompositeOperation = "source-atop";
+                    piirraGradient(ctx, canvas.width, canvas.height);
+                }
+
+                // D) Valkoiset laikut (Kaikkien edellisten PÄÄLLE)
                 if (valkoistenMaara > 0) {
                     ctx.globalCompositeOperation = "source-atop";
                     piirraCalicoLaikut(ctx, canvas.width, canvas.height, "#ffffff", valkoistenMaara);
                 }
             }
 
-            // VAIHE 2: KEHON ÄÄRIVIIVAT (Harjan alle)
+            // VAIHE 2: KEHON ÄÄRIVIIVAT
             ctx.globalCompositeOperation = "source-over";
             if (imgViiva) {
                 ctx.drawImage(imgViiva, 0, 0, canvas.width, canvas.height);
             }
 
-            // VAIHE 3: HARJAN POHJAVÄRI (Kehon ääriviivojen päälle)
+            // VAIHE 3: HARJAN POHJAVÄRI
             if (imgPohjaHarja) {
                 const tempCanvas = document.createElement("canvas");
                 tempCanvas.width = canvas.width;
@@ -417,7 +522,7 @@
                 ctx.drawImage(tempCanvas, 0, 0);
             }
 
-            // VAIHE 4: HARJAN ÄÄRIVIIVAT (Kaikista päällimmäiseksi)
+            // VAIHE 4: HARJAN ÄÄRIVIIVAT
             if (imgViivaHarja) {
                 ctx.globalCompositeOperation = "source-over";
                 ctx.drawImage(imgViivaHarja, 0, 0, canvas.width, canvas.height);
@@ -435,4 +540,4 @@
         }
     </script>
 </body>
-</html>
+    </html> 
