@@ -24,6 +24,11 @@
             grid-template-columns: repeat(9, 1fr);
             gap: 4px;
         }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
         label {
             font-size: 9px;
             font-weight: bold;
@@ -37,6 +42,34 @@
             border-radius: 6px;
             border: 1px solid #ccc;
             font-size: 10px;
+        }
+        input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 10px;
+            font-family: monospace;
+        }
+        .color-input-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .color-input-group input[type="color"] {
+            flex: 0 0 50px;
+            height: 35px;
+            width: 50px;
+        }
+        .color-input-group input[type="text"] {
+            flex: 1;
         }
         button {
             width: 100%;
@@ -67,6 +100,7 @@
             text-align: center;
             font-size: 13px;
             line-height: 1.4;
+            white-space: pre-wrap;
         }
     </style>
 </head>
@@ -169,6 +203,24 @@
             </div>
         </div>
 
+        <h3>Silmien värit</h3>
+        <div class="grid-2">
+            <div>
+                <label>Isän silmien väri</label>
+                <div class="color-input-group">
+                    <input type="color" id="isa_eyes" value="#8B4513">
+                    <input type="text" id="isa_eyes_hex" value="#8B4513" placeholder="#RRGGBB">
+                </div>
+            </div>
+            <div>
+                <label>Emän silmien väri</label>
+                <div class="color-input-group">
+                    <input type="color" id="ema_eyes" value="#D2691E">
+                    <input type="text" id="ema_eyes_hex" value="#D2691E" placeholder="#RRGGBB">
+                </div>
+            </div>
+        </div>
+
         <button onclick="arvoPentu()">Arvo pentu!</button>
     </div>
 
@@ -179,6 +231,50 @@
     </div>
 
     <script>
+        // Color sync functionality
+        document.getElementById("isa_eyes").addEventListener("input", (e) => {
+            document.getElementById("isa_eyes_hex").value = e.target.value.toUpperCase();
+        });
+        document.getElementById("isa_eyes_hex").addEventListener("input", (e) => {
+            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                document.getElementById("isa_eyes").value = e.target.value;
+            }
+        });
+
+        document.getElementById("ema_eyes").addEventListener("input", (e) => {
+            document.getElementById("ema_eyes_hex").value = e.target.value.toUpperCase();
+        });
+        document.getElementById("ema_eyes_hex").addEventListener("input", (e) => {
+            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                document.getElementById("ema_eyes").value = e.target.value;
+            }
+        });
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 139, g: 69, b: 19 };
+        }
+
+        function rgbToHex(r, g, b) {
+            return "#" + [r, g, b].map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? "0" + hex : hex;
+            }).join("").toUpperCase();
+        }
+
+        function blendColors(color1, color2) {
+            const rgb1 = hexToRgb(color1);
+            const rgb2 = hexToRgb(color2);
+            const blendedR = Math.round((rgb1.r + rgb2.r) / 2);
+            const blendedG = Math.round((rgb1.g + rgb2.g) / 2);
+            const blendedB = Math.round((rgb1.b + rgb2.b) / 2);
+            return rgbToHex(blendedR, blendedG, blendedB);
+        }
+
         function arvoAlleeli(genotyyppi) {
             let alleelit = [];
             if (genotyyppi === "BB") alleelit = ["B", "B"];
@@ -327,6 +423,11 @@
             let emaT = document.getElementById("ema_t").value;
             let emaG = document.getElementById("ema_g").value;
 
+            // Eye colors
+            let isaEyeColor = document.getElementById("isa_eyes").value.toUpperCase();
+            let emaEyeColor = document.getElementById("ema_eyes").value.toUpperCase();
+            let pentuEyeColor = blendColors(isaEyeColor, emaEyeColor);
+
             // 2. Arvo pennun genotyypit
             let pentuM = luoGenotyyppi(isaM, emaM);
             let pentuS = luoGenotyyppi(isaS, emaS);
@@ -438,10 +539,11 @@
 
             document.getElementById("tulos").innerText = 
                 `Genotyyppi: ${pentuM} / ${pentuS} / ${pentuC} / ${pentuB} / ${pentuH} / ${pentuO} / ${pentuN} / ${pentuT} / ${pentuG}\n` +
+                `Silmien väri: ${pentuEyeColor}\n` +
                 `Ominaisuudet: ${harjaTeksti}, Keho: ${kehoTeksti}`;
 
             // 6. Piirto
-            piirraErillinenHarjaPentu(pohjaTiedosto, pohjaHarjaTiedosto, viivaTiedosto, viivaHarjaTiedosto, paavari, laikkavari, variHarja, valkoistenMaara, onkoBrindle, onkoGradient);
+            piirraErillinenHarjaPentu(pohjaTiedosto, pohjaHarjaTiedosto, viivaTiedosto, viivaHarjaTiedosto, paavari, laikkavari, variHarja, valkoistenMaara, onkoBrindle, onkoGradient, pentuEyeColor);
         }
 
         function lataaKuva(url) {
@@ -454,16 +556,17 @@
             });
         }
 
-        async function piirraErillinenHarjaPentu(pohja, pohjaHarja, viiva, viivaHarja, kehoVari, laikkavari, harjaVari, valkoistenMaara, onkoBrindle, onkoGradient) {
+        async function piirraErillinenHarjaPentu(pohja, pohjaHarja, viiva, viivaHarja, kehoVari, laikkavari, harjaVari, valkoistenMaara, onkoBrindle, onkoGradient, eyeColor) {
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const [imgPohja, imgPohjaHarja, imgViiva, imgViivaHarja] = await Promise.all([
+            const [imgPohja, imgPohjaHarja, imgViiva, imgViivaHarja, imgSilmät] = await Promise.all([
                 lataaKuva(pohja),
                 lataaKuva(pohjaHarja),
                 lataaKuva(viiva),
-                lataaKuva(viivaHarja)
+                lataaKuva(viivaHarja),
+                lataaKuva("Untitled309_20261008221009.png")
             ]);
 
             // VAIHE 1: KEHO (Pohjaväri + Calico-laikut + Brindle + Gradient + Valkoinen)
@@ -527,6 +630,22 @@
                 ctx.globalCompositeOperation = "source-over";
                 ctx.drawImage(imgViivaHarja, 0, 0, canvas.width, canvas.height);
             }
+
+            // VAIHE 5: SILMIEN VÄRI
+            if (imgSilmät) {
+                const tempEyeCanvas = document.createElement("canvas");
+                tempEyeCanvas.width = canvas.width;
+                tempEyeCanvas.height = canvas.height;
+                const tempEyeCtx = tempEyeCanvas.getContext("2d");
+
+                tempEyeCtx.drawImage(imgSilmät, 0, 0, canvas.width, canvas.height);
+                tempEyeCtx.globalCompositeOperation = "source-in";
+                tempEyeCtx.fillStyle = eyeColor;
+                tempEyeCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.globalCompositeOperation = "source-over";
+                ctx.drawImage(tempEyeCanvas, 0, 0);
+            }
         }
 
         function lataaKuvaLaitteelle() {
@@ -540,4 +659,4 @@
         }
     </script>
 </body>
-    </html> 
+</html>
