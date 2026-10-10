@@ -534,7 +534,22 @@
                 ? (pentuB.includes("B") ? { h: 210, s: 15, l: 45 } : (pentuB === "bb" || pentuB === "bb1") ? { h: 280, s: 12, l: 50 } : { h: 30, s: 25, l: 65 })
                 : (pentuB.includes("B") ? { h: 30, s: 5, l: 18 } : (pentuB === "bb" || pentuB === "bb1") ? { h: 25, s: 40, l: 25 } : { h: 20, s: 50, l: 40 });
 
-            let harjaHSL = (pentuH.includes("H") && pentuH.includes("h")) ? { h: 25, s: 35, l: 25 } : (pentuH === "HH") ? { h: 30, s: 5, l: 15 } : { h: 35, s: 60, l: 70 };
+            let harjaBaseHSL;
+            let onkoPunainenNakyy = (pentuO === "oo" || pentuO === "Oo");
+
+            if (onkoPunainenNakyy && Math.random() < 0.5) {
+                if (pentuH === "HH") {
+                    harjaBaseHSL = onkoDiluutio ? { h: 25, s: 30, l: 30 } : { h: 15, s: 60, l: 20 };
+                } else if (pentuH.includes("H") && pentuH.includes("h")) {
+                    harjaBaseHSL = onkoDiluutio ? { h: 35, s: 45, l: 60 } : { h: 25, s: 70, l: 35 };
+                } else {
+                    harjaBaseHSL = onkoDiluutio ? { h: 45, s: 50, l: 85 } : { h: 35, s: 85, l: 60 };
+                }
+            } else {
+                harjaBaseHSL = (pentuH === "HH") ? { h: 30, s: 10, l: 15 } :
+                               (pentuH.includes("H") && pentuH.includes("h")) ? { h: 25, s: 35, l: 28 } :
+                               { h: 35, s: 65, l: 75 };
+            }
             
             let punainenHSL = pentuO === "oo" 
                 ? (onkoDiluutio ? { h: 42, s: 45, l: 85 } : { h: 38, s: 55, l: 78 })
@@ -542,30 +557,19 @@
 
             let variTumma = varioiHSL(tummaHSL.h, tummaHSL.s, tummaHSL.l);
             let variPunainen = varioiHSL(punainenHSL.h, punainenHSL.s, punainenHSL.l);
-            let variHarja = varioiHSL(harjaHSL.h, harjaHSL.s, harjaHSL.l);
+            let variHarja = varioiHSL(harjaBaseHSL.h, harjaBaseHSL.s, harjaBaseHSL.l);
 
             let paavari = "", laikkavari = null;
-            let onkoPunainenNakyy = false;
 
             if (pentuN === "NN") {
                 paavari = variTumma;
             } else if (pentuN === "nn") {
                 paavari = variPunainen;
-                onkoPunainenNakyy = true;
             } else {
-                onkoPunainenNakyy = true;
                 if (Math.random() < 0.5) {
                     paavari = variPunainen; laikkavari = variTumma;
                 } else {
                     paavari = variTumma; laikkavari = variPunainen;
-                }
-            }
-
-            if (onkoPunainenNakyy && Math.random() < 0.5) {
-                if (pentuH === "hh") {
-                    variHarja = "#fce8a4";
-                } else {
-                    variHarja = onkoDiluutio ? varioiHSL(30, 60, 70) : varioiHSL(20, 80, 50);
                 }
             }
 
@@ -601,12 +605,12 @@
             let onkoExtraKorvat = kuvioFace && (Math.random() < 0.5);
             let onkoExtraKuono  = kuvioFace && (Math.random() < 0.5);
 
-            let centerOpacity = (pentuV === "vv") ? (0.50 + Math.random() * 0.40) : 1.0;
+            let onkoVaaleaKeskus = (pentuV === "vv");
 
             document.getElementById("tulos").innerText = 
                 `Genotyyppi: ${currentGenotype}\n` +
                 `Silmät: ${pentuEyeColor} | Nahka: ${pentuSkinColor} | Nenä: ${pentuNose}\n` +
-                `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} ${(pentuV === "vv") ? "(vv vaalea keskus)" : "(V_ tasavärinen)"}`;
+                `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} ${onkoVaaleaKeskus ? "(vv vaalea keskus)" : "(V_ tasavärinen)"}`;
 
             let karvanPohja = onkoKihara ? "Untitled309_20261008214953.png" : "Untitled309_20261008214944.png";
             let ihoTiedosto = onkoKihara ? "Untitled309_20261009185045.png" : earsAndPawsSkinFile;
@@ -621,6 +625,7 @@
                 harjaVari: variHarja,
                 pentuS: pentuS,
                 onkoGradient: onkoGradient,
+                onkoVaaleaKeskus: onkoVaaleaKeskus,
                 eyeColor: pentuEyeColor,
                 eyeLineart: eyeLinearts[Math.floor(Math.random() * eyeLinearts.length)],
                 skinColor: pentuSkinColor,
@@ -633,8 +638,7 @@
                 kuvioBody: kuvioBody,
                 kuvioFace: kuvioFace,
                 extraKorvat: onkoExtraKorvat ? faceExtraKorvat : null,
-                extraKuono: onkoExtraKuono ? faceExtraKuono : null,
-                centerOpacity: centerOpacity
+                extraKuono: onkoExtraKuono ? faceExtraKuono : null
             });
         }
 
@@ -661,21 +665,30 @@
             canvasCtx.putImageData(imgData, 0, 0);
         }
 
-        function tummennaHexTaiRgb(hexOrRgb, maara = 35) {
-            let r = 100, g = 50, b = 20;
-            if (hexOrRgb.startsWith("hsl")) {
-                let dummy = document.createElement("div");
-                dummy.style.color = hexOrRgb;
-                document.body.appendChild(dummy);
-                let computed = getComputedStyle(dummy).color;
-                document.body.removeChild(dummy);
-                let match = computed.match(/\d+/g);
-                if (match) { r = parseInt(match[0]); g = parseInt(match[1]); b = parseInt(match[2]); }
-            } else {
-                let rgb = hexToRgb(hexOrRgb);
-                r = rgb.r; g = rgb.g; b = rgb.b;
+        // DYNAAMINEN PIKSELIKOHTAINEN TUMMENNUS (Takaa täydellisen mukautumisen laikkuihin ja gradienttiin ilman multiply-virheitä)
+        function tummennaPikseleittain(bodyCtx, maskCanvas, width, height, tummennusAmount = 45) {
+            let bodyData = bodyCtx.getImageData(0, 0, width, height);
+            let maskCtx = maskCanvas.getContext("2d");
+            let maskData = maskCtx.getImageData(0, 0, width, height);
+
+            let bPixels = bodyData.data;
+            let mPixels = maskData.data;
+
+            for (let i = 0; i < bPixels.length; i += 4) {
+                let maskAlpha = mPixels[i + 3];
+                if (maskAlpha > 20) {
+                    // Katsotaan alla olevan kehon pikselin väri täsmälleen
+                    let r = bPixels[i];
+                    let g = bPixels[i + 1];
+                    let b = bPixels[i + 2];
+
+                    // Lasketaan tummennetut arvot (varmistetaan ettei mene alle 0)
+                    bPixels[i]     = Math.max(0, r - tummennusAmount);
+                    bPixels[i + 1] = Math.max(0, g - tummennusAmount);
+                    bPixels[i + 2] = Math.max(0, b - tummennusAmount);
+                }
             }
-            return `rgb(${Math.max(0, r - maara)}, ${Math.max(0, g - maara)}, ${Math.max(0, b - maara)})`;
+            bodyCtx.putImageData(bodyData, 0, 0);
         }
 
         async function piirraErillinenHarjaPentu(opts) {
@@ -735,7 +748,7 @@
                 lataaKuva(opts.extraKuono)
             ]);
 
-            // VAIHE 1: KEHO POHJAVÄRILLE JA (V-geeni, Gradientti, Kuviot)
+            // VAIHE 1: KEHO POHJAVÄRILLE JA (S-geeni SS vs Ss vs ss)
             if (imgPohja) {
                 const bodyCanvas = document.createElement("canvas");
                 bodyCanvas.width = canvas.width; bodyCanvas.height = canvas.height;
@@ -744,52 +757,64 @@
                 bodyCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
                 bodyCtx.globalCompositeOperation = "source-in";
 
-                bodyCtx.fillStyle = opts.kehoVari;
-                bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
+                if (opts.pentuS === "SS") {
+                    bodyCtx.fillStyle = "#ffffff";
+                    bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
 
-                if (opts.laikkavari) {
                     bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.laikkavari, 8);
+                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.kehoVari, 7);
+                    if (opts.laikkavari) {
+                        piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.laikkavari, 5);
+                    }
+                } else {
+                    bodyCtx.fillStyle = opts.kehoVari;
+                    bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    if (opts.laikkavari) {
+                        bodyCtx.globalCompositeOperation = "source-atop";
+                        piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.laikkavari, 8);
+                    }
                 }
 
+                // GRADIENTTI
                 if (opts.onkoGradient) {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraGradient(bodyCtx, canvas.width, canvas.height);
                 }
 
-                // V-GEENIN KESKUSVARJO (Asetetaan vain vv-geenille vaalea keskusvaikutus)
-                if (opts.centerOpacity < 1.0) {
+                // V-GEENIN KESKUSVARJO (Vain jos vv)
+                if (opts.onkoVaaleaKeskus) {
                     const centerCanvas = document.createElement("canvas");
                     centerCanvas.width = canvas.width; centerCanvas.height = canvas.height;
                     const centerCtx = centerCanvas.getContext("2d");
                     centerCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
                     centerCtx.globalCompositeOperation = "source-in";
                     let grad = centerCtx.createRadialGradient(canvas.width/2, canvas.height/2, 50, canvas.width/2, canvas.height/2, canvas.width/1.5);
-                    grad.addColorStop(0, "rgba(255, 255, 255, 0.6)");
+                    grad.addColorStop(0, "rgba(255, 255, 255, 0.55)");
                     grad.addColorStop(1, "rgba(255, 255, 255, 0.0)");
                     centerCtx.fillStyle = grad;
                     centerCtx.fillRect(0, 0, canvas.width, canvas.height);
 
                     bodyCtx.save();
                     bodyCtx.globalCompositeOperation = "source-atop";
-                    bodyCtx.globalAlpha = 1.0 - opts.centerOpacity;
+                    bodyCtx.globalAlpha = 0.5 + Math.random() * 0.3;
                     bodyCtx.drawImage(centerCanvas, 0, 0);
                     bodyCtx.restore();
                 }
 
-                // KUVIOT (Raidat, täplät, ocelot) - Puhdas maskaus ilman rumia päällekkäisyysviivoja
+                // KUVIOT (Raidat, täplät, ocelot) - PIKSELIKOHTAINEN TARKISTUS JOKAISELLE ALLA OLEVALLE PIKSELILLE
                 if (opts.kuviotyyppi !== "eikuviota") {
-                    const patternFillCanvas = document.createElement("canvas");
-                    patternFillCanvas.width = canvas.width; patternFillCanvas.height = canvas.height;
-                    const fillCtx = patternFillCanvas.getContext("2d");
+                    const fillMaskCanvas = document.createElement("canvas");
+                    fillMaskCanvas.width = canvas.width; fillMaskCanvas.height = canvas.height;
+                    const fCtx = fillMaskCanvas.getContext("2d");
 
-                    const patternOutlineCanvas = document.createElement("canvas");
-                    patternOutlineCanvas.width = canvas.width; patternOutlineCanvas.height = canvas.height;
-                    const outlineCtx = patternOutlineCanvas.getContext("2d");
+                    const outlineMaskCanvas = document.createElement("canvas");
+                    outlineMaskCanvas.width = canvas.width; outlineMaskCanvas.height = canvas.height;
+                    const oCtx = outlineMaskCanvas.getContext("2d");
 
                     function lisaaKuvioKokoelmaan(imgColor, imgOutline) {
-                        if (imgColor) fillCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
-                        if (imgOutline) outlineCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
+                        if (imgColor) fCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
+                        if (imgOutline) oCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
                     }
 
                     if (opts.kuvioLimbs) lisaaKuvioKokoelmaan(imgLimbsColor, imgLimbsOutline);
@@ -800,38 +825,18 @@
                         if (imgExtraKuono)  lisaaKuvioKokoelmaan(imgExtraKuono, null);
                     }
 
-                    // Lasketaan dynaamisesti tummennetut värit pohjan perusteella
-                    let dynamicFillColor = tummennaHexTaiRgb(opts.kehoVari, 35);
-                    let dynamicOutlineColor = tummennaHexTaiRgb(opts.kehoVari, 65);
+                    // A) Keskusta tummennetaan mukautuvasti alla olevista pikseleistä
+                    tummennaPikseleittain(bodyCtx, fillMaskCanvas, canvas.width, canvas.height, 35);
 
-                    fillCtx.globalCompositeOperation = "source-in";
-                    fillCtx.fillStyle = dynamicFillColor;
-                    fillCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    teeTaysinPeittavaksi(outlineCtx, canvas.width, canvas.height);
-                    outlineCtx.globalCompositeOperation = "source-in";
-                    outlineCtx.fillStyle = dynamicOutlineColor;
-                    outlineCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    // Piirretään suoraan kehon päälle ilman virheitä
-                    bodyCtx.save();
-                    bodyCtx.globalCompositeOperation = "source-atop";
-                    bodyCtx.drawImage(patternFillCanvas, 0, 0);
-                    bodyCtx.restore();
-
-                    bodyCtx.save();
-                    bodyCtx.globalCompositeOperation = "source-atop";
-                    bodyCtx.drawImage(patternOutlineCanvas, 0, 0);
-                    bodyCtx.restore();
+                    // B) Ääriviiva tummennetaan hieman enemmän
+                    teeTaysinPeittavaksi(oCtx, canvas.width, canvas.height);
+                    tummennaPikseleittain(bodyCtx, outlineMaskCanvas, canvas.width, canvas.height, 65);
                 }
 
-                // VALKOISET TÄPLÄT (S-geeni) - Asetettu AINA muiden kuvioiden ja gradienttien PÄÄLLE
-                if (opts.pentuS === "SS") {
+                // VALKOISET TÄPLÄT (Ss) - Asetettu AINA kaikkien muiden kuvioiden ja gradienttien PÄÄLLE
+                if (opts.pentuS === "Ss") {
                     bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 10);
-                } else if (opts.pentuS === "Ss") {
-                    bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 3);
+                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 4);
                 }
 
                 bodyCtx.globalCompositeOperation = "destination-in";
