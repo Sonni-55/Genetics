@@ -777,20 +777,7 @@
                 bodyCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
                 bodyCtx.globalCompositeOperation = "source-in";
 
-                if (opts.pentuS === "SS") {
-                    // SS: Valkoinen tausta, jolla pääväri ja laikut ovat isoina läikkinä
-                    bodyCtx.fillStyle = "#ffffff";
-                    bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.kehoVari, 7);
-                    if (opts.laikkavari) {
-                        piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.laikkavari, 5);
-                    }
-                } else {
-                    // Ss tai ss: Pääväri taustana
-                    bodyCtx.fillStyle = opts.kehoVari;
-                    bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
+            }
 
                     if (opts.laikkavari) {
                         bodyCtx.globalCompositeOperation = "source-atop";
@@ -805,24 +792,33 @@
                 }
 
                 // V-GEENIN KESKUSVARJO (Vain jos vv)
-                if (opts.onkoVaaleaKeskus) {
-                    const centerCanvas = document.createElement("canvas");
-                    centerCanvas.width = canvas.width; centerCanvas.height = canvas.height;
-                    const centerCtx = centerCanvas.getContext("2d");
-                    centerCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
-                    centerCtx.globalCompositeOperation = "source-in";
-                    let grad = centerCtx.createRadialGradient(canvas.width/2, canvas.height/2, 50, canvas.width/2, canvas.height/2, canvas.width/1.5);
-                    grad.addColorStop(0, "rgba(255, 255, 255, 0.55)");
-                    grad.addColorStop(1, "rgba(255, 255, 255, 0.0)");
-                    centerCtx.fillStyle = grad;
-                    centerCtx.fillRect(0, 0, canvas.width, canvas.height);
+if (opts.onkoVaaleaKeskus) {
+    const centerCanvas = document.createElement("canvas");
+    centerCanvas.width = canvas.width; 
+    centerCanvas.height = canvas.height;
+    const centerCtx = centerCanvas.getContext("2d");
 
-                    bodyCtx.save();
-                    bodyCtx.globalCompositeOperation = "source-atop";
-                    bodyCtx.globalAlpha = 0.5 + Math.random() * 0.3;
-                    bodyCtx.drawImage(centerCanvas, 0, 0);
-                    bodyCtx.restore();
-                }
+    centerCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
+    centerCtx.globalCompositeOperation = "source-in";
+
+    // Vahvempi säteittäinen gradientti keskelle
+    let grad = centerCtx.createRadialGradient(
+        canvas.width / 2, canvas.height / 2, 20, 
+        canvas.width / 2, canvas.height / 2, canvas.width / 2
+    );
+    grad.addColorStop(0, "rgba(255, 255, 255, 0.85)"); // Huomattavasti kirkkaampi keskus
+    grad.addColorStop(0.6, "rgba(255, 255, 255, 0.3)");
+    grad.addColorStop(1, "rgba(255, 255, 255, 0.0)");
+
+    centerCtx.fillStyle = grad;
+    centerCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+    bodyCtx.save();
+    bodyCtx.globalCompositeOperation = "source-atop";
+    bodyCtx.globalAlpha = 0.8; // Suurempi peittävyys, jotta efekti näkyy selvästi
+    bodyCtx.drawImage(centerCanvas, 0, 0);
+    bodyCtx.restore();
+}
 
                 // KUVIOT (Raidat, täplät, ocelot) - Erillinen käsittely vv:lle ja V_ -geeneille
                 if (opts.kuviotyyppi !== "eikuviota") {
@@ -879,18 +875,45 @@
                 }
 
                 // VALKOISET LAIKUT (Ss) - Asetettu AINA muiden kuvioiden ja gradienttien PÄÄLLE
-                if (opts.pentuS === "Ss") {
-                    bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 3);
-                }
+                // Erotetaan SS ja Ss laikkujen koon ja määrän perusteella:
+if (opts.pentuS === "SS") {
+    bodyCtx.globalCompositeOperation = "source-atop";
+    // Suurempi maara ja suurempi säde SS-geenille
+    piirraIsotValkoisetAlueet(bodyCtx, canvas.width, canvas.height, "#ffffff", 5);
+} else if (opts.pentuS === "Ss") {
+    bodyCtx.globalCompositeOperation = "source-atop";
+    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 3);
+}
+function piirraIsotValkoisetAlueet(ctx, width, height, vari, maara = 4) {
+    ctx.fillStyle = vari;
+    for (let i = 0; i < maara; i++) {
+        let keskiX = Math.random() * width;
+        let keskiY = Math.random() * height;
+        // Kasvatetaan sädettä huomattavasti (300-600px koon laikut)
+        let perussade = 200 + Math.random() * 300; 
+        let pisteita = 10 + Math.floor(Math.random() * 6);
 
-                bodyCtx.globalCompositeOperation = "destination-in";
-                bodyCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
+        let pisteet = [];
+        for (let j = 0; j < pisteita; j++) {
+            let kulma = (j / pisteita) * Math.PI * 2;
+            let sädevaihtelu = perussade * (0.7 + Math.random() * 0.6);
+            pisteet.push({ x: keskiX + Math.cos(kulma) * sädevaihtelu, y: keskiY + Math.sin(kulma) * sädevaihtelu });
+        }
 
-                ctx.globalCompositeOperation = "source-over";
-                ctx.drawImage(bodyCanvas, 0, 0);
-            }
+        ctx.beginPath();
+        let alkukeksiX = (pisteet[0].x + pisteet[pisteita - 1].x) / 2;
+        let alkukeksiY = (pisteet[0].y + pisteet[pisteita - 1].y) / 2;
+        ctx.moveTo(alkukeksiX, alkukeksiY);
 
+        for (let j = 0; j < pisteita; j++) {
+            let nykyinen = pisteet[j];
+            let seuraava = pisteet[(j + 1) % pisteita];
+            ctx.quadraticCurveTo(nykyinen.x, nykyinen.y, (nykyinen.x + seuraava.x) / 2, (nykyinen.y + seuraava.y) / 2);
+        }
+        ctx.closePath();
+        ctx.fill();
+    }
+}
             // VAIHE 2: KEHON ÄÄRIVIIVAT
             ctx.globalCompositeOperation = "source-over";
             if (imgViiva) ctx.drawImage(imgViiva, 0, 0, canvas.width, canvas.height);
