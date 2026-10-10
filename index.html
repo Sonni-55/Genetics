@@ -455,7 +455,7 @@
             let dH = h + (Math.random() * 10 - 5);
             let dS = Math.max(0, Math.min(100, s + (Math.random() * 10 - 5)));
             let dL = Math.max(0, Math.min(100, l + (Math.random() * 12 - 6)));
-            return `hsl(${dH}, ${dS}%, ${dL}%)`;
+            return { h: dH, s: dS, l: dL, css: `hsl(${dH}, ${dS}%, ${dL}%)` };
         }
 
         function piirraCalicoLaikut(ctx, width, height, vari, maara = 6) {
@@ -585,24 +585,25 @@
                     ? (onkoDiluutio ? { h: 42, s: 45, l: 85 } : { h: 38, s: 55, l: 78 })
                     : (onkoDiluutio ? { h: 30, s: 60, l: 70 } : { h: 20, s: 80, l: 50 });
 
-                let variTumma = varioiHSL(tummaHSL.h, tummaHSL.s, tummaHSL.l);
-                let variPunainen = varioiHSL(punainenHSL.h, punainenHSL.s, punainenHSL.l);
-                let variHarja = varioiHSL(harjaBaseHSL.h, harjaBaseHSL.s, harjaBaseHSL.l);
+                let variTummaObj = varioiHSL(tummaHSL.h, tummaHSL.s, tummaHSL.l);
+                let variPunainenObj = varioiHSL(punainenHSL.h, punainenHSL.s, punainenHSL.l);
+                let variHarjaObj = varioiHSL(harjaBaseHSL.h, harjaBaseHSL.s, harjaBaseHSL.l);
 
-                let paavari = "", laikkavari = null;
+                let paavariObj = null, laikkavariObj = null;
 
                 if (pentuN === "NN") {
-                    paavari = variTumma;
+                    paavariObj = variTummaObj;
                 } else if (pentuN === "nn") {
-                    paavari = variPunainen;
+                    paavariObj = variPunainenObj;
                 } else {
                     if (Math.random() < 0.5) {
-                        paavari = variPunainen; laikkavari = variTumma;
+                        paavariObj = variPunainenObj; laikkavariObj = variTummaObj;
                     } else {
-                        paavari = variTumma; laikkavari = variPunainen;
+                        paavariObj = variTummaObj; laikkavariObj = variPunainenObj;
                     }
                 }
 
+                let variHarja = variHarjaObj.css;
                 if (pentuS === "SS" && Math.random() < 0.5) {
                     variHarja = "#ffffff";
                 } else if (pentuS === "Ss" && Math.random() < 0.2) {
@@ -639,7 +640,7 @@
                 document.getElementById("tulos").innerText = 
                     `Genotyyppi: ${currentGenotype}\n` +
                     `Silmät: ${pentuEyeColor} | Nahka: ${pentuSkinColor} | Nenä: ${pentuNose}\n` +
-                    `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} ${onkoVaaleaKeskus ? "(vv vaalea kuvion keskus)" : "(V_ tasavärinen kuvio)"}`;
+                    `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} ${onkoVaaleaKeskus ? "(vv haalea kuvion keskus)" : "(V_ tasavärinen kuvio)"}`;
 
                 let karvanPohja = onkoKihara ? "Untitled309_20261008214953.png" : "Untitled309_20261008214944.png";
                 let ihoTiedosto = onkoKihara ? "Untitled309_20261009185045.png" : earsAndPawsSkinFile;
@@ -649,8 +650,8 @@
                     pohjaHarja: onkoHarja ? (onkoKihara ? "Untitled309_20261008151613.png" : "Untitled309_20261008151605.png") : null,
                     viiva: onkoKihara ? "Untitled309_20261008153435.png" : "Untitled309_20261008153442.png",
                     viivaHarja: onkoHarja ? (onkoKihara ? "Untitled309_20261008153420.png" : "Untitled309_20261008153429.png") : null,
-                    kehoVari: paavari,
-                    laikkavari: laikkavari,
+                    kehoVariObj: paavariObj,
+                    laikkavariObj: laikkavariObj,
                     harjaVari: variHarja,
                     pentuS: pentuS,
                     onkoGradient: onkoGradient,
@@ -685,27 +686,29 @@
             });
         }
 
-        function tummennaPikseleittain(bodyCtx, maskCanvas, width, height, tummennusAmount = 45) {
-            let bodyData = bodyCtx.getImageData(0, 0, width, height);
-            let maskCtx = maskCanvas.getContext("2d");
-            let maskData = maskCtx.getImageData(0, 0, width, height);
+        // Luo 100% peittävän tasavärisen kerroksen annetun maskikuvan muotoon
+        function luoTaysinPeittavaVariKuvio(maskImg, hexOrCssColor, width, height) {
+            const canvas = document.createElement("canvas");
+            canvas.width = width; canvas.height = height;
+            const ctx = canvas.getContext("2d");
 
-            let bPixels = bodyData.data;
-            let mPixels = maskData.data;
+            ctx.drawImage(maskImg, 0, 0, width, height);
+            ctx.globalCompositeOperation = "source-in";
+            ctx.fillStyle = hexOrCssColor;
+            ctx.fillRect(0, 0, width, height);
 
-            for (let i = 0; i < bPixels.length; i += 4) {
-                let maskAlpha = mPixels[i + 3];
-                if (maskAlpha > 20) {
-                    let r = bPixels[i];
-                    let g = bPixels[i + 1];
-                    let b = bPixels[i + 2];
-
-                    bPixels[i]     = Math.max(0, r - tummennusAmount);
-                    bPixels[i + 1] = Math.max(0, g - tummennusAmount);
-                    bPixels[i + 2] = Math.max(0, b - tummennusAmount);
+            // Pakotetaan kaikki ei-läpinäkyvät pikselit 100% peittäväksi (alpha 255)
+            let imgData = ctx.getImageData(0, 0, width, height);
+            let data = imgData.data;
+            for (let i = 3; i < data.length; i += 4) {
+                if (data[i] > 10) {
+                    data[i] = 255;
+                } else {
+                    data[i] = 0;
                 }
             }
-            bodyCtx.putImageData(bodyData, 0, 0);
+            ctx.putImageData(imgData, 0, 0);
+            return canvas;
         }
 
         async function piirraErillinenHarjaPentu(opts) {
@@ -774,12 +777,12 @@
                 bodyCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
                 bodyCtx.globalCompositeOperation = "source-in";
 
-                bodyCtx.fillStyle = opts.kehoVari;
+                bodyCtx.fillStyle = opts.kehoVariObj.css;
                 bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
 
-                if (opts.laikkavari) {
+                if (opts.laikkavariObj) {
                     bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.laikkavari, 8);
+                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.laikkavariObj.css, 8);
                 }
 
                 if (opts.onkoGradient) {
@@ -787,57 +790,45 @@
                     piirraGradient(bodyCtx, canvas.width, canvas.height);
                 }
 
-                // KUVIOT (Raidat, täplät, ocelot)
+                // LASKETAAN SOVELTUVAT PEITTÄVÄT VÄRIT KUVIOLLE
+                // Ääriviivan väri = turkkia selvästi tummempi
+                let outlineColor = `hsl(${opts.kehoVariObj.h}, ${opts.kehoVariObj.s}%, ${Math.max(5, opts.kehoVariObj.l - 28)}%)`;
+                
+                // Keskuksen väri:
+                // Jos V_ -> samansävyinen tumma kuin ääriviiva
+                // Jos vv -> haaleampi tummus (vain vähän turkkia tummempi)
+                let centerColor = opts.onkoVaaleaKeskus
+                    ? `hsl(${opts.kehoVariObj.h}, ${opts.kehoVariObj.s}%, ${Math.max(8, opts.kehoVariObj.l - 12)}%)`
+                    : outlineColor;
+
+                // KUVIOT (Raidat, täplät, ocelot) - MASKATAAN VÄRIT PIKSELEITTÄIN PÄÄLLE
                 if (opts.kuviotyyppi !== "eikuviota") {
-                    const outlineMaskCanvas = document.createElement("canvas");
-                    outlineMaskCanvas.width = canvas.width; outlineMaskCanvas.height = canvas.height;
-                    const outCtx = outlineMaskCanvas.getContext("2d");
+                    bodyCtx.globalCompositeOperation = "source-atop";
 
-                    const colorMaskCanvas = document.createElement("canvas");
-                    colorMaskCanvas.width = canvas.width; colorMaskCanvas.height = canvas.height;
-                    const colCtx = colorMaskCanvas.getContext("2d");
-
-                    function lisaaKuvioMaskeihin(imgColor, imgOutline) {
-                        if (imgColor) colCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
-                        if (imgOutline) outCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
+                    // 1. KUVION KESKUS/SISUSVÄRI (COLOR) ALIMMAKSI
+                    function piirraKeskusMaski(imgColor) {
+                        if (!imgColor) return;
+                        let cCanvas = luoTaysinPeittavaVariKuvio(imgColor, centerColor, canvas.width, canvas.height);
+                        bodyCtx.drawImage(cCanvas, 0, 0);
                     }
 
-                    if (opts.kuvioLimbs) lisaaKuvioMaskeihin(imgLimbsColor, imgLimbsOutline);
-                    if (opts.kuvioBody) lisaaKuvioMaskeihin(imgBodyColor, imgBodyOutline);
-                    if (opts.kuvioFace) {
-                        lisaaKuvioMaskeihin(imgFaceColor, imgFaceOutline);
-                        if (imgExtraKorvat) outCtx.drawImage(imgExtraKorvat, 0, 0, canvas.width, canvas.height);
-                        if (imgExtraKuono)  outCtx.drawImage(imgExtraKuono, 0, 0, canvas.width, canvas.height);
+                    if (opts.kuvioLimbs) piirraKeskusMaski(imgLimbsColor);
+                    if (opts.kuvioBody)  piirraKeskusMaski(imgBodyColor);
+                    if (opts.kuvioFace)  piirraKeskusMaski(imgFaceColor);
+
+                    // 2. ÄÄRIVIIVAT (OUTLINE) PEITTÄVÄSTI PÄÄLLE (peittää saumakohdat virheettömästi)
+                    function piirraAariviivaMaski(imgOutline) {
+                        if (!imgOutline) return;
+                        let oCanvas = luoTaysinPeittavaVariKuvio(imgOutline, outlineColor, canvas.width, canvas.height);
+                        bodyCtx.drawImage(oCanvas, 0, 0);
                     }
 
-                    if (opts.onkoVaaleaKeskus) {
-                        // vv-GEENI:
-                        // 1. Ensin tummennetaan sisus (color) kevyesti, jotta se on haalea keskusta
-                        tummennaPikseleittain(bodyCtx, colorMaskCanvas, canvas.width, canvas.height, 22);
-
-                        // 2. Sen JÄLKEEN piirretään ääriviivat (outline) omalla tummemmalla vahvuudellaan TÄYSIN PEITTÄVÄSTI PÄÄLLE
-                        // Luodaan erillinen tummennettu canvas ääriviivoille, joka liitetään 100% näkyvyydellä
-                        const outlineDrawCanvas = document.createElement("canvas");
-                        outlineDrawCanvas.width = canvas.width; outlineDrawCanvas.height = canvas.height;
-                        const outDrawCtx = outlineDrawCanvas.getContext("2d");
-                        outDrawCtx.drawImage(bodyCanvas, 0, 0);
-                        tummennaPikseleittain(outDrawCtx, outlineMaskCanvas, canvas.width, canvas.height, 55);
-
-                        // Leikataan ääriviivat vain outline-maskin alueelle ja piirretään suoraan kehon päälle ilman saumojen tummennuksia
-                        outDrawCtx.globalCompositeOperation = "destination-in";
-                        outDrawCtx.drawImage(outlineMaskCanvas, 0, 0);
-
-                        bodyCtx.globalCompositeOperation = "source-over";
-                        bodyCtx.drawImage(outlineDrawCanvas, 0, 0);
-                    } else {
-                        // V_ -GEENI (Tasavärinen kuvio):
-                        const combinedMask = document.createElement("canvas");
-                        combinedMask.width = canvas.width; combinedMask.height = canvas.height;
-                        const combCtx = combinedMask.getContext("2d");
-                        combCtx.drawImage(colorMaskCanvas, 0, 0);
-                        combCtx.drawImage(outlineMaskCanvas, 0, 0);
-
-                        tummennaPikseleittain(bodyCtx, combinedMask, canvas.width, canvas.height, 48);
+                    if (opts.kuvioLimbs) piirraAariviivaMaski(imgLimbsOutline);
+                    if (opts.kuvioBody)  piirraAariviivaMaski(imgBodyOutline);
+                    if (opts.kuvioFace)  {
+                        piirraAariviivaMaski(imgFaceOutline);
+                        if (imgExtraKorvat) piirraAariviivaMaski(imgExtraKorvat);
+                        if (imgExtraKuono)  piirraAariviivaMaski(imgExtraKuono);
                     }
                 }
 
