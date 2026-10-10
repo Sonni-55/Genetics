@@ -178,7 +178,14 @@
                 <label>V (Varjo)</label>
                 <select id="isa_v"><option>VV</option><option selected>Vv</option><option>vv</option></select>
             </div>
-            <div></div>
+            <div>
+                <label>K (Ääriviiva)</label>
+                <select id="isa_k"><option>KK</option><option selected>Kk</option><option>kk</option></select>
+            </div>
+            <div>
+                <label>E (Keskusta)</label>
+                <select id="isa_e"><option>EE</option><option selected>Ee</option><option>ee</option></select>
+            </div>
         </div>
 
         <div style="margin-top: 10px;">
@@ -258,7 +265,14 @@
                 <label>V (Varjo)</label>
                 <select id="ema_v"><option>VV</option><option selected>Vv</option><option>vv</option></select>
             </div>
-            <div></div>
+            <div>
+                <label>K (Ääriviiva)</label>
+                <select id="ema_k"><option>KK</option><option selected>Kk</option><option>kk</option></select>
+            </div>
+            <div>
+                <label>E (Keskusta)</label>
+                <select id="ema_e"><option>EE</option><option selected>Ee</option><option>ee</option></select>
+            </div>
         </div>
 
         <div style="margin-top: 10px;">
@@ -548,12 +562,14 @@
                 let pentuP = luoGenotyyppi(document.getElementById("isa_p").value, document.getElementById("ema_p").value);
                 let pentuR = luoGenotyyppi(document.getElementById("isa_r").value, document.getElementById("ema_r").value);
                 let pentuV = luoGenotyyppi(document.getElementById("isa_v").value, document.getElementById("ema_v").value);
+                let pentuK = luoGenotyyppi(document.getElementById("isa_k").value, document.getElementById("ema_k").value);
+                let pentuE = luoGenotyyppi(document.getElementById("isa_e").value, document.getElementById("ema_e").value);
 
                 let pentuEyeColor = arvoVariVanhemmilta(document.getElementById("isa_eyes").value.toUpperCase(), document.getElementById("ema_eyes").value.toUpperCase());
                 let pentuSkinColor = arvoVariVanhemmilta(document.getElementById("isa_skin").value.toUpperCase(), document.getElementById("ema_skin").value.toUpperCase());
                 let pentuNose = Math.random() < 0.5 ? document.getElementById("isa_nose").value : document.getElementById("ema_nose").value;
 
-                currentGenotype = `${pentuM}_${pentuS}_${pentuC}_${pentuB}_${pentuD}_${pentuH}_${pentuO}_${pentuN}_${pentuG}_${pentuA}_${pentuP}_${pentuR}_${pentuV}`;
+                currentGenotype = `${pentuM}_${pentuS}_${pentuC}_${pentuB}_${pentuD}_${pentuH}_${pentuO}_${pentuN}_${pentuG}_${pentuA}_${pentuP}_${pentuR}_${pentuV}_${pentuK}_${pentuE}`;
 
                 let onkoHarja = pentuM.includes("M");
                 let onkoKihara = (pentuC === "cc");
@@ -634,12 +650,11 @@
 
                 let onkoExtraKorvat = kuvioFace && (Math.random() < 0.5);
                 let onkoExtraKuono  = kuvioFace && (Math.random() < 0.5);
-                let onkoVaaleaKeskus = (pentuV === "vv");
 
                 document.getElementById("tulos").innerText = 
                     `Genotyyppi: ${currentGenotype}\n` +
                     `Silmät: ${pentuEyeColor} | Nahka: ${pentuSkinColor} | Nenä: ${pentuNose}\n` +
-                    `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} ${onkoVaaleaKeskus ? "(vv haalea kuvion keskus)" : "(V_ tasavärinen kuvio)"}`;
+                    `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} | V (${pentuV}), K (${pentuK}), E (${pentuE})`;
 
                 let karvanPohja = onkoKihara ? "Untitled309_20261008214953.png" : "Untitled309_20261008214944.png";
                 let ihoTiedosto = onkoKihara ? "Untitled309_20261009185045.png" : earsAndPawsSkinFile;
@@ -654,7 +669,9 @@
                     harjaVari: variHarja,
                     pentuS: pentuS,
                     onkoGradient: onkoGradient,
-                    onkoVaaleaKeskus: onkoVaaleaKeskus,
+                    pentuV: pentuV,
+                    pentuK: pentuK,
+                    pentuE: pentuE,
                     eyeColor: pentuEyeColor,
                     eyeLineart: eyeLinearts[Math.floor(Math.random() * eyeLinearts.length)],
                     skinColor: pentuSkinColor,
@@ -685,28 +702,30 @@
             });
         }
 
-        // Muuttaa annetun kanavakuvan muotoon, jossa pikselit ottavat värin suoraan pohjasta ja tummentavat sitä (100% peittävästi)
-        function luoPohjaanMukautuvaKuvio(maskImg, bodyCanvas, width, height, tummennusMäärä) {
+        // Luo pohjaan mukautuvan 100% peittävän kuvion
+        function luoPohjaanMukautuvaKuvio(maskImg, bodyCanvas, width, height, muutosArvo, onkoVaaleampi = false) {
             const canvas = document.createElement("canvas");
             canvas.width = width; canvas.height = height;
             const ctx = canvas.getContext("2d");
 
-            // Kopioidaan ensin kehon värit/laikut/gradientit sellaisenaan taustalle
             ctx.drawImage(bodyCanvas, 0, 0);
-
-            // Leikataan maskilla vain kuvion alueelle
             ctx.globalCompositeOperation = "destination-in";
             ctx.drawImage(maskImg, 0, 0, width, height);
 
-            // Tummennetaan nämä pikselit annetulla määrällä
             let imgData = ctx.getImageData(0, 0, width, height);
             let data = imgData.data;
             for (let i = 0; i < data.length; i += 4) {
                 if (data[i + 3] > 20) {
-                    data[i]     = Math.max(0, data[i] - tummennusMäärä);
-                    data[i + 1] = Math.max(0, data[i + 1] - tummennusMäärä);
-                    data[i + 2] = Math.max(0, data[i + 2] - tummennusMäärä);
-                    data[i + 3] = 255; // Pakotetaan 100% peittäväksi, jotta saumat peittyvät täydellisesti
+                    if (onkoVaaleampi) {
+                        data[i]     = Math.min(255, data[i] + muutosArvo);
+                        data[i + 1] = Math.min(255, data[i + 1] + muutosArvo);
+                        data[i + 2] = Math.min(255, data[i + 2] + muutosArvo);
+                    } else {
+                        data[i]     = Math.max(0, data[i] - muutosArvo);
+                        data[i + 1] = Math.max(0, data[i + 1] - muutosArvo);
+                        data[i + 2] = Math.max(0, data[i + 2] - muutosArvo);
+                    }
+                    data[i + 3] = 255;
                 }
             }
             ctx.putImageData(imgData, 0, 0);
@@ -770,7 +789,6 @@
                 lataaKuva(opts.extraKuono)
             ]);
 
-            // VAIHE 1: KEHO POHJAVÄRILLE, GRADIENTILLE JA KUPIOILLE
             if (imgPohja) {
                 const bodyCanvas = document.createElement("canvas");
                 bodyCanvas.width = canvas.width; bodyCanvas.height = canvas.height;
@@ -792,19 +810,40 @@
                     piirraGradient(bodyCtx, canvas.width, canvas.height);
                 }
 
-                // KUVIOT (Raidat, täplät, ocelot) - MUKAUTUVAT POHJAAN PIKSELEITTÄIN
+                // KUVIOT: V-, K- ja E-geenien yhteispeli
                 if (opts.kuviotyyppi !== "eikuviota") {
-                    let centerTummennus = opts.onkoVaaleaKeskus ? 18 : 50; // vv on haaleampi, V_ on yhtä tumma kuin ääriviiva
-                    let outlineTummennus = 50; // Ääriviivat ovat aina mukavan tummat
+                    let outlineTummennus = opts.pentuK === "KK" ? 65 : (opts.pentuK === "kk" ? 25 : 45);
+
+                    let centerTummennus = 0;
+                    let centerOnkoVaalea = false;
+
+                    if (opts.pentuV.includes("V")) {
+                        // V_ -> Keskusta on aina ääriviivojen / saman tummuinen, E-geeni ei vaikuta
+                        centerTummennus = outlineTummennus;
+                        centerOnkoVaalea = false;
+                    } else {
+                        // vv -> E-geeni säätää keskustaa
+                        if (opts.pentuE === "EE") {
+                            centerTummennus = 22; // Ääriviivoja vaaleampi, mutta kehoa tummempi
+                            centerOnkoVaalea = false;
+                        } else if (opts.pentuE === "Ee") {
+                            centerTummennus = 10; // Vielä haaleampi, mutta kehoa tummempi
+                            centerOnkoVaalea = false;
+                        } else {
+                            // ee -> Kehoakin vaaleampi väri (pastelli)
+                            centerTummennus = 30;
+                            centerOnkoVaalea = true;
+                        }
+                    }
 
                     function piirraKuvioOsa(imgColor, imgOutline) {
                         if (imgColor) {
-                            let cCanvas = luoPohjaanMukautuvaKuvio(imgColor, bodyCanvas, canvas.width, canvas.height, centerTummennus);
+                            let cCanvas = luoPohjaanMukautuvaKuvio(imgColor, bodyCanvas, canvas.width, canvas.height, centerTummennus, centerOnkoVaalea);
                             bodyCtx.globalCompositeOperation = "source-over";
                             bodyCtx.drawImage(cCanvas, 0, 0);
                         }
                         if (imgOutline) {
-                            let oCanvas = luoPohjaanMukautuvaKuvio(imgOutline, bodyCanvas, canvas.width, canvas.height, outlineTummennus);
+                            let oCanvas = luoPohjaanMukautuvaKuvio(imgOutline, bodyCanvas, canvas.width, canvas.height, outlineTummennus, false);
                             bodyCtx.globalCompositeOperation = "source-over";
                             bodyCtx.drawImage(oCanvas, 0, 0);
                         }
@@ -815,11 +854,11 @@
                     if (opts.kuvioFace)  {
                         piirraKuvioOsa(imgFaceColor, imgFaceOutline);
                         if (imgExtraKorvat) {
-                            let kCanvas = luoPohjaanMukautuvaKuvio(imgExtraKorvat, bodyCanvas, canvas.width, canvas.height, outlineTummennus);
+                            let kCanvas = luoPohjaanMukautuvaKuvio(imgExtraKorvat, bodyCanvas, canvas.width, canvas.height, outlineTummennus, false);
                             bodyCtx.drawImage(kCanvas, 0, 0);
                         }
                         if (imgExtraKuono) {
-                            let qCanvas = luoPohjaanMukautuvaKuvio(imgExtraKuono, bodyCanvas, canvas.width, canvas.height, outlineTummennus);
+                            let qCanvas = luoPohjaanMukautuvaKuvio(imgExtraKuono, bodyCanvas, canvas.width, canvas.height, outlineTummennus, false);
                             bodyCtx.drawImage(qCanvas, 0, 0);
                         }
                     }
