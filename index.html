@@ -702,7 +702,7 @@
             });
         }
 
-        // Luo pohjaan mukautuvan 100% peittävän kuvion
+        // Luo pohjaan mukautuvan 100% peittävän kuvion ilman rumia reunojen tummentumia/saumoja
         function luoPohjaanMukautuvaKuvio(maskImg, bodyCanvas, width, height, muutosArvo, onkoVaaleampi = false) {
             const canvas = document.createElement("canvas");
             canvas.width = width; canvas.height = height;
@@ -715,7 +715,7 @@
             let imgData = ctx.getImageData(0, 0, width, height);
             let data = imgData.data;
             for (let i = 0; i < data.length; i += 4) {
-                if (data[i + 3] > 20) {
+                if (data[i + 3] > 10) {
                     if (onkoVaaleampi) {
                         data[i]     = Math.min(255, data[i] + muutosArvo);
                         data[i + 1] = Math.min(255, data[i + 1] + muutosArvo);
@@ -725,7 +725,9 @@
                         data[i + 1] = Math.max(0, data[i + 1] - muutosArvo);
                         data[i + 2] = Math.max(0, data[i + 2] - muutosArvo);
                     }
-                    data[i + 3] = 255;
+                    data[i + 3] = 255; // 100% peittävä alpha poistaa saumojen tummennisongelmat
+                } else {
+                    data[i + 3] = 0;
                 }
             }
             ctx.putImageData(imgData, 0, 0);
@@ -810,51 +812,50 @@
                     piirraGradient(bodyCtx, canvas.width, canvas.height);
                 }
 
-                // KUVIOT: V-, K- ja E-geenien yhteispeli
+                // KUVIOT: V-, K- ja E-geenien yhteispeli selkeillä kontrasteilla
                 if (opts.kuviotyyppi !== "eikuviota") {
-                    // K-GEENI (ÄÄRIVIIVAT):
+                    
+                    // K-GEENI (ÄÄRIVIIVAT) - Selvät erot KK, Kk, kk välillä
                     let outlineTummennus = 0;
                     let outlineOnkoVaaleampi = false;
 
                     if (opts.pentuK === "KK") {
-                        outlineTummennus = 65; // Erittäin tumma
+                        outlineTummennus = 90;  // Erittäin tumma / mustamainen kontrasti
                     } else if (opts.pentuK === "Kk") {
-                        outlineTummennus = 45; // Normaali tumma
+                        outlineTummennus = 45;  // Perus tumma
                     } else {
-                        // kk -> Ääriviivat ovat kehon pohjaväriä vaaleammat
-                        outlineTummennus = 35;
+                        outlineTummennus = 45;  // kk -> Vaaleampi / pastellinen ääriviiva
                         outlineOnkoVaaleampi = true;
                     }
 
-                    // E-GEENI / V-GEENI (KESKUSTA):
+                    // E-GEENI / V-GEENI (KESKUSTA) - Selvät erot EE, Ee, ee välillä
                     let centerTummennus = 0;
                     let centerOnkoVaalea = false;
 
                     if (opts.pentuV.includes("V")) {
-                        // V_ -> Keskusta on aina ääriviivojen sävyinen
                         centerTummennus = outlineTummennus;
                         centerOnkoVaalea = outlineOnkoVaaleampi;
                     } else {
-                        // vv -> E-geeni säätää keskustaa
                         if (opts.pentuE === "EE") {
-                            centerTummennus = 22; // Ääriviivoja vaaleampi, mutta kehoa tummempi
+                            centerTummennus = 50;   // Paljon tummempi, selvä ero Ee:hen
                             centerOnkoVaalea = false;
                         } else if (opts.pentuE === "Ee") {
-                            centerTummennus = 10; // Vielä haaleampi, mutta kehoa tummempi
+                            centerTummennus = 15;   // Kevyesti haalea, lähellä kehoa
                             centerOnkoVaalea = false;
                         } else {
-                            // ee -> Kehoakin vaaleampi väri
-                            centerTummennus = 30;
+                            centerTummennus = 45;   // ee -> Kehoa vaaleampi pastelli
                             centerOnkoVaalea = true;
                         }
                     }
 
                     function piirraKuvioOsa(imgColor, imgOutline) {
+                        // 1. Ensin piirretään sisusväri (color)
                         if (imgColor) {
                             let cCanvas = luoPohjaanMukautuvaKuvio(imgColor, bodyCanvas, canvas.width, canvas.height, centerTummennus, centerOnkoVaalea);
                             bodyCtx.globalCompositeOperation = "source-over";
                             bodyCtx.drawImage(cCanvas, 0, 0);
                         }
+                        // 2. Sen JÄLKEEN piirretään ääriviiva (outline) TÄYSIN PEITTÄVÄSTI PÄÄLLE, mikä peittää saumakohdat täydellisesti
                         if (imgOutline) {
                             let oCanvas = luoPohjaanMukautuvaKuvio(imgOutline, bodyCanvas, canvas.width, canvas.height, outlineTummennus, outlineOnkoVaaleampi);
                             bodyCtx.globalCompositeOperation = "source-over";
