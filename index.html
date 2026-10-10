@@ -812,15 +812,28 @@
 
                 // KUVIOT: V-, K- ja E-geenien yhteispeli
                 if (opts.kuviotyyppi !== "eikuviota") {
-                    let outlineTummennus = opts.pentuK === "KK" ? 65 : (opts.pentuK === "kk" ? 25 : 45);
+                    // K-GEENI (ÄÄRIVIIVAT):
+                    let outlineTummennus = 0;
+                    let outlineOnkoVaaleampi = false;
 
+                    if (opts.pentuK === "KK") {
+                        outlineTummennus = 65; // Erittäin tumma
+                    } else if (opts.pentuK === "Kk") {
+                        outlineTummennus = 45; // Normaali tumma
+                    } else {
+                        // kk -> Ääriviivat ovat kehon pohjaväriä vaaleammat
+                        outlineTummennus = 35;
+                        outlineOnkoVaaleampi = true;
+                    }
+
+                    // E-GEENI / V-GEENI (KESKUSTA):
                     let centerTummennus = 0;
                     let centerOnkoVaalea = false;
 
                     if (opts.pentuV.includes("V")) {
-                        // V_ -> Keskusta on aina ääriviivojen / saman tummuinen, E-geeni ei vaikuta
+                        // V_ -> Keskusta on aina ääriviivojen sävyinen
                         centerTummennus = outlineTummennus;
-                        centerOnkoVaalea = false;
+                        centerOnkoVaalea = outlineOnkoVaaleampi;
                     } else {
                         // vv -> E-geeni säätää keskustaa
                         if (opts.pentuE === "EE") {
@@ -830,7 +843,7 @@
                             centerTummennus = 10; // Vielä haaleampi, mutta kehoa tummempi
                             centerOnkoVaalea = false;
                         } else {
-                            // ee -> Kehoakin vaaleampi väri (pastelli)
+                            // ee -> Kehoakin vaaleampi väri
                             centerTummennus = 30;
                             centerOnkoVaalea = true;
                         }
@@ -843,7 +856,7 @@
                             bodyCtx.drawImage(cCanvas, 0, 0);
                         }
                         if (imgOutline) {
-                            let oCanvas = luoPohjaanMukautuvaKuvio(imgOutline, bodyCanvas, canvas.width, canvas.height, outlineTummennus, false);
+                            let oCanvas = luoPohjaanMukautuvaKuvio(imgOutline, bodyCanvas, canvas.width, canvas.height, outlineTummennus, outlineOnkoVaaleampi);
                             bodyCtx.globalCompositeOperation = "source-over";
                             bodyCtx.drawImage(oCanvas, 0, 0);
                         }
@@ -854,11 +867,11 @@
                     if (opts.kuvioFace)  {
                         piirraKuvioOsa(imgFaceColor, imgFaceOutline);
                         if (imgExtraKorvat) {
-                            let kCanvas = luoPohjaanMukautuvaKuvio(imgExtraKorvat, bodyCanvas, canvas.width, canvas.height, outlineTummennus, false);
+                            let kCanvas = luoPohjaanMukautuvaKuvio(imgExtraKorvat, bodyCanvas, canvas.width, canvas.height, outlineTummennus, outlineOnkoVaaleampi);
                             bodyCtx.drawImage(kCanvas, 0, 0);
                         }
                         if (imgExtraKuono) {
-                            let qCanvas = luoPohjaanMukautuvaKuvio(imgExtraKuono, bodyCanvas, canvas.width, canvas.height, outlineTummennus, false);
+                            let qCanvas = luoPohjaanMukautuvaKuvio(imgExtraKuono, bodyCanvas, canvas.width, canvas.height, outlineTummennus, outlineOnkoVaaleampi);
                             bodyCtx.drawImage(qCanvas, 0, 0);
                         }
                     }
