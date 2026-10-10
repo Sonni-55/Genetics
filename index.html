@@ -702,35 +702,79 @@
             });
         }
 
-        // Luo pohjaan mukautuvan 100% peittävän kuvion ilman rumia reunojen tummentumia/saumoja
-        function luoPohjaanMukautuvaKuvio(maskImg, bodyCanvas, width, height, muutosArvo, onkoVaaleampi = false) {
+        // TÄYDELLINEN SAUMATON ALKUPERÄINEN VÄRISYSTEEMI:
+        // Yksi kanvas, johon leikataan pohjan väri ja muokataan pikselit suoraan 100% peittäviksi!
+        function piirraSaumatonMukautuvaKuvio(maskCenter, maskOutline, bodyCanvas, width, height, cArvo, cVaalea, oArvo, oVaalea) {
             const canvas = document.createElement("canvas");
             canvas.width = width; canvas.height = height;
             const ctx = canvas.getContext("2d");
 
-            ctx.drawImage(bodyCanvas, 0, 0);
-            ctx.globalCompositeOperation = "destination-in";
-            ctx.drawImage(maskImg, 0, 0, width, height);
+            // 1. KESKUS: Poimitaan pohja ja leikataan se keskuksen maskilla
+            if (maskCenter) {
+                const cCanvas = document.createElement("canvas");
+                cCanvas.width = width; cCanvas.height = height;
+                const cCtx = cCanvas.getContext("2d");
 
-            let imgData = ctx.getImageData(0, 0, width, height);
-            let data = imgData.data;
-            for (let i = 0; i < data.length; i += 4) {
-                if (data[i + 3] > 10) {
-                    if (onkoVaaleampi) {
-                        data[i]     = Math.min(255, data[i] + muutosArvo);
-                        data[i + 1] = Math.min(255, data[i + 1] + muutosArvo);
-                        data[i + 2] = Math.min(255, data[i + 2] + muutosArvo);
+                cCtx.drawImage(bodyCanvas, 0, 0);
+                cCtx.globalCompositeOperation = "destination-in";
+                cCtx.drawImage(maskCenter, 0, 0, width, height);
+
+                let cData = cCtx.getImageData(0, 0, width, height);
+                let d = cData.data;
+                for (let i = 0; i < d.length; i += 4) {
+                    if (d[i + 3] > 10) {
+                        if (cVaalea) {
+                            d[i]     = Math.min(255, d[i] + cArvo);
+                            d[i + 1] = Math.min(255, d[i + 1] + cArvo);
+                            d[i + 2] = Math.min(255, d[i + 2] + cArvo);
+                        } else {
+                            d[i]     = Math.max(0, d[i] - cArvo);
+                            d[i + 1] = Math.max(0, d[i + 1] - cArvo);
+                            d[i + 2] = Math.max(0, d[i + 2] - cArvo);
+                        }
+                        d[i + 3] = 255; // Pakotetaan täysin peittäväksi -> POISTAA SAUMAT!
                     } else {
-                        data[i]     = Math.max(0, data[i] - muutosArvo);
-                        data[i + 1] = Math.max(0, data[i + 1] - muutosArvo);
-                        data[i + 2] = Math.max(0, data[i + 2] - muutosArvo);
+                        d[i + 3] = 0;
                     }
-                    data[i + 3] = 255; // 100% peittävä alpha poistaa saumojen tummennisongelmat
-                } else {
-                    data[i + 3] = 0;
                 }
+                cCtx.putImageData(cData, 0, 0);
+                ctx.drawImage(cCanvas, 0, 0);
             }
-            ctx.putImageData(imgData, 0, 0);
+
+            // 2. ÄÄRIVIIVA: Poimitaan pohja ja leikataan se ääriviivan maskilla
+            if (maskOutline) {
+                const oCanvas = document.createElement("canvas");
+                oCanvas.width = width; oCanvas.height = height;
+                const oCtx = oCanvas.getContext("2d");
+
+                oCtx.drawImage(bodyCanvas, 0, 0);
+                oCtx.globalCompositeOperation = "destination-in";
+                oCtx.drawImage(maskOutline, 0, 0, width, height);
+
+                let oData = oCtx.getImageData(0, 0, width, height);
+                let d = oData.data;
+                for (let i = 0; i < d.length; i += 4) {
+                    if (d[i + 3] > 10) {
+                        if (oVaalea) {
+                            d[i]     = Math.min(255, d[i] + oArvo);
+                            d[i + 1] = Math.min(255, d[i + 1] + oArvo);
+                            d[i + 2] = Math.min(255, d[i + 2] + oArvo);
+                        } else {
+                            d[i]     = Math.max(0, d[i] - oArvo);
+                            d[i + 1] = Math.max(0, d[i + 1] - oArvo);
+                            d[i + 2] = Math.max(0, d[i + 2] - oArvo);
+                        }
+                        d[i + 3] = 255; // Pakotetaan täysin peittäväksi!
+                    } else {
+                        d[i + 3] = 0;
+                    }
+                }
+                oCtx.putImageData(oData, 0, 0);
+
+                // Ääriviiva piirretään AINA keskuksen PÄÄLLE samalle kankaalle
+                ctx.drawImage(oCanvas, 0, 0);
+            }
+
             return canvas;
         }
 
@@ -820,11 +864,11 @@
                     let outlineOnkoVaaleampi = false;
 
                     if (opts.pentuK === "KK") {
-                        outlineTummennus = 90;  // Erittäin tumma / mustamainen kontrasti
+                        outlineTummennus = 90;  // Erittäin tumma
                     } else if (opts.pentuK === "Kk") {
-                        outlineTummennus = 45;  // Perus tumma
+                        outlineTummennus = 50;  // Perus tumma (aiempi toimiva)
                     } else {
-                        outlineTummennus = 45;  // kk -> Vaaleampi / pastellinen ääriviiva
+                        outlineTummennus = 50;  // kk -> Vaaleampi / pastellinen ääriviiva
                         outlineOnkoVaaleampi = true;
                     }
 
@@ -837,30 +881,24 @@
                         centerOnkoVaalea = outlineOnkoVaaleampi;
                     } else {
                         if (opts.pentuE === "EE") {
-                            centerTummennus = 50;   // Paljon tummempi, selvä ero Ee:hen
+                            centerTummennus = 60;   // Paljon tummempi kuin Ee, selvä ero
                             centerOnkoVaalea = false;
                         } else if (opts.pentuE === "Ee") {
-                            centerTummennus = 15;   // Kevyesti haalea, lähellä kehoa
+                            centerTummennus = 20;   // Kevyesti haalea, lähellä kehoa
                             centerOnkoVaalea = false;
                         } else {
-                            centerTummennus = 45;   // ee -> Kehoa vaaleampi pastelli
+                            centerTummennus = 50;   // ee -> Kehoa vaaleampi pastelli
                             centerOnkoVaalea = true;
                         }
                     }
 
                     function piirraKuvioOsa(imgColor, imgOutline) {
-                        // 1. Ensin piirretään sisusväri (color)
-                        if (imgColor) {
-                            let cCanvas = luoPohjaanMukautuvaKuvio(imgColor, bodyCanvas, canvas.width, canvas.height, centerTummennus, centerOnkoVaalea);
-                            bodyCtx.globalCompositeOperation = "source-over";
-                            bodyCtx.drawImage(cCanvas, 0, 0);
-                        }
-                        // 2. Sen JÄLKEEN piirretään ääriviiva (outline) TÄYSIN PEITTÄVÄSTI PÄÄLLE, mikä peittää saumakohdat täydellisesti
-                        if (imgOutline) {
-                            let oCanvas = luoPohjaanMukautuvaKuvio(imgOutline, bodyCanvas, canvas.width, canvas.height, outlineTummennus, outlineOnkoVaaleampi);
-                            bodyCtx.globalCompositeOperation = "source-over";
-                            bodyCtx.drawImage(oCanvas, 0, 0);
-                        }
+                        let cCanvas = piirraSaumatonMukautuvaKuvio(
+                            imgColor, imgOutline, bodyCanvas, canvas.width, canvas.height, 
+                            centerTummennus, centerOnkoVaalea, outlineTummennus, outlineOnkoVaaleampi
+                        );
+                        bodyCtx.globalCompositeOperation = "source-over";
+                        bodyCtx.drawImage(cCanvas, 0, 0);
                     }
 
                     if (opts.kuvioLimbs) piirraKuvioOsa(imgLimbsColor, imgLimbsOutline);
@@ -868,11 +906,11 @@
                     if (opts.kuvioFace)  {
                         piirraKuvioOsa(imgFaceColor, imgFaceOutline);
                         if (imgExtraKorvat) {
-                            let kCanvas = luoPohjaanMukautuvaKuvio(imgExtraKorvat, bodyCanvas, canvas.width, canvas.height, outlineTummennus, outlineOnkoVaaleampi);
+                            let kCanvas = piirraSaumatonMukautuvaKuvio(null, imgExtraKorvat, bodyCanvas, canvas.width, canvas.height, 0, false, outlineTummennus, outlineOnkoVaaleampi);
                             bodyCtx.drawImage(kCanvas, 0, 0);
                         }
                         if (imgExtraKuono) {
-                            let qCanvas = luoPohjaanMukautuvaKuvio(imgExtraKuono, bodyCanvas, canvas.width, canvas.height, outlineTummennus, outlineOnkoVaaleampi);
+                            let qCanvas = piirraSaumatonMukautuvaKuvio(null, imgExtraKuono, bodyCanvas, canvas.width, canvas.height, 0, false, outlineTummennus, outlineOnkoVaaleampi);
                             bodyCtx.drawImage(qCanvas, 0, 0);
                         }
                     }
