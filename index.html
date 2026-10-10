@@ -21,8 +21,8 @@
         }
         .grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px 4px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px 6px;
         }
         .grid-2 {
             display: grid;
@@ -30,7 +30,7 @@
             gap: 8px;
         }
         label {
-            font-size: 8px;
+            font-size: 9px;
             font-weight: bold;
             display: block;
             margin-bottom: 2px;
@@ -38,10 +38,10 @@
         }
         select {
             width: 100%;
-            padding: 4px 0px;
+            padding: 5px 2px;
             border-radius: 6px;
             border: 1px solid #ccc;
-            font-size: 10px;
+            font-size: 11px;
             text-align: center;
         }
         input[type="color"] {
@@ -99,9 +99,10 @@
             margin-top: 10px;
             font-weight: bold;
             text-align: center;
-            font-size: 13px;
-            line-height: 1.4;
+            font-size: 12px;
+            line-height: 1.5;
             white-space: pre-wrap;
+            word-break: break-word;
         }
     </style>
 </head>
@@ -117,7 +118,7 @@
                 <select id="isa_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
             </div>
             <div>
-                <label>S (Valk.)</label>
+                <label>S (Valkoinen)</label>
                 <select id="isa_s"><option>SS</option><option selected>Ss</option><option>ss</option></select>
             </div>
             <div>
@@ -140,11 +141,11 @@
                 <select id="isa_d"><option>DD</option><option selected>Dd</option><option>dd</option></select>
             </div>
             <div>
-                <label>H (H.Väri)</label>
+                <label>H (Harjan väri)</label>
                 <select id="isa_h"><option>HH</option><option selected>Hh</option><option>hh</option></select>
             </div>
             <div>
-                <label>O (Puna)</label>
+                <label>O (Punainen)</label>
                 <select id="isa_o"><option selected>OO</option><option>Oo</option><option>oo</option></select>
             </div>
             <div>
@@ -152,7 +153,7 @@
                 <select id="isa_n"><option>NN</option><option selected>Nn</option><option>nn</option></select>
             </div>
             <div>
-                <label>G (Grad.)</label>
+                <label>G (Gradientti)</label>
                 <select id="isa_g"><option>GG</option><option selected>Gg</option><option>gg</option></select>
             </div>
             <div>
@@ -204,7 +205,7 @@
                 <select id="ema_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
             </div>
             <div>
-                <label>S (Valk.)</label>
+                <label>S (Valkoinen)</label>
                 <select id="ema_s"><option>SS</option><option selected>Ss</option><option>ss</option></select>
             </div>
             <div>
@@ -227,11 +228,11 @@
                 <select id="ema_d"><option>DD</option><option selected>Dd</option><option>dd</option></select>
             </div>
             <div>
-                <label>H (H.Väri)</label>
+                <label>H (Harjan väri)</label>
                 <select id="ema_h"><option>HH</option><option selected>Hh</option><option>hh</option></select>
             </div>
             <div>
-                <label>O (Puna)</label>
+                <label>O (Punainen)</label>
                 <select id="ema_o"><option selected>OO</option><option>Oo</option><option>oo</option></select>
             </div>
             <div>
@@ -239,7 +240,7 @@
                 <select id="ema_n"><option>NN</option><option selected>Nn</option><option>nn</option></select>
             </div>
             <div>
-                <label>G (Grad.)</label>
+                <label>G (Gradientti)</label>
                 <select id="ema_g"><option>GG</option><option selected>Gg</option><option>gg</option></select>
             </div>
             <div>
@@ -629,12 +630,16 @@
                 let onkoTaplaGeeni = (pentuP === "pp");
 
                 let kuviotyyppi = "eikuviota";
+                let kuviotSanaksi = "ei kuviota";
                 if (onkoRaitaGeeni && onkoTaplaGeeni) {
                     kuviotyyppi = "ocelot";
+                    kuviotSanaksi = "ocelot";
                 } else if (onkoRaitaGeeni) {
                     kuviotyyppi = "raita";
+                    kuviotSanaksi = "raidat";
                 } else if (onkoTaplaGeeni) {
                     kuviotyyppi = "täplä";
+                    kuviotSanaksi = "täplät";
                 }
 
                 let kuvioLimbs = false, kuvioBody = false, kuvioFace = false;
@@ -651,10 +656,28 @@
                 let onkoExtraKorvat = kuvioFace && (Math.random() < 0.5);
                 let onkoExtraKuono  = kuvioFace && (Math.random() < 0.5);
 
+                // Muodostetaan fenotyyppiteksti ilman geenikirjaimia
+                let perusVarinNimi = onkoDiluutio ? "Sininen" : "Musta";
+                if (pentuB.includes("bb")) perusVarinNimi = onkoDiluutio ? "Lila" : "Suklaa";
+                if (pentuB === "b1b1") perusVarinNimi = onkoDiluutio ? "Vaalea kaneli" : "Kaneli";
+                if (pentuO === "oo") perusVarinNimi = onkoDiluutio ? "Creme" : "Punainen";
+
+                let fenotyyppiKuvaus = `Pohjaväri: ${perusVarinNimi}`;
+                if (laikkavari) {
+                    let laikkiVarinNimi = (paavari === variPunainen) ? (onkoDiluutio ? "sininen/musta" : "tumma") : (onkoDiluutio ? "creme" : "punainen");
+                    fenotyyppiKuvaus += `, kilpikonnakuvio (${laikkiVarinNimi})`;
+                }
+                if (kuviotyyppi !== "eikuviota") {
+                    fenotyyppiKuvaus += `, kuvio (${kuviotSanaksi})`;
+                    let ääriviivaSävy = pentuK.includes("k") ? "vaaleampi" : "tummempi";
+                    let keskustaSävy = pentuE.includes("e") ? "vaaleampi" : "tummempi";
+                    fenotyyppiKuvaus += ` [ääriviivat: ${ääriviivaSävy}, keskusta: ${keskustaSävy}]`;
+                }
+
                 document.getElementById("tulos").innerText = 
                     `Genotyyppi: ${currentGenotype}\n` +
                     `Silmät: ${pentuEyeColor} | Nahka: ${pentuSkinColor} | Nenä: ${pentuNose}\n` +
-                    `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} | V (${pentuV}), K (${pentuK}), E (${pentuE})`;
+                    `Fenotyyppi: ${fenotyyppiKuvaus}`;
 
                 let karvanPohja = onkoKihara ? "Untitled309_20261008214953.png" : "Untitled309_20261008214944.png";
                 let ihoTiedosto = onkoKihara ? "Untitled309_20261009185045.png" : earsAndPawsSkinFile;
@@ -702,14 +725,11 @@
             });
         }
 
-        // TÄYDELLINEN SAUMATON ALKUPERÄINEN VÄRISYSTEEMI:
-        // Yksi kanvas, johon leikataan pohjan väri ja muokataan pikselit suoraan 100% peittäviksi!
         function piirraSaumatonMukautuvaKuvio(maskCenter, maskOutline, bodyCanvas, width, height, cArvo, cVaalea, oArvo, oVaalea) {
             const canvas = document.createElement("canvas");
             canvas.width = width; canvas.height = height;
             const ctx = canvas.getContext("2d");
 
-            // 1. KESKUS: Poimitaan pohja ja leikataan se keskuksen maskilla
             if (maskCenter) {
                 const cCanvas = document.createElement("canvas");
                 cCanvas.width = width; cCanvas.height = height;
@@ -732,7 +752,7 @@
                             d[i + 1] = Math.max(0, d[i + 1] - cArvo);
                             d[i + 2] = Math.max(0, d[i + 2] - cArvo);
                         }
-                        d[i + 3] = 255; // Pakotetaan täysin peittäväksi -> POISTAA SAUMAT!
+                        d[i + 3] = 255;
                     } else {
                         d[i + 3] = 0;
                     }
@@ -741,7 +761,6 @@
                 ctx.drawImage(cCanvas, 0, 0);
             }
 
-            // 2. ÄÄRIVIIVA: Poimitaan pohja ja leikataan se ääriviivan maskilla
             if (maskOutline) {
                 const oCanvas = document.createElement("canvas");
                 oCanvas.width = width; oCanvas.height = height;
@@ -764,14 +783,12 @@
                             d[i + 1] = Math.max(0, d[i + 1] - oArvo);
                             d[i + 2] = Math.max(0, d[i + 2] - oArvo);
                         }
-                        d[i + 3] = 255; // Pakotetaan täysin peittäväksi!
+                        d[i + 3] = 255;
                     } else {
                         d[i + 3] = 0;
                     }
                 }
                 oCtx.putImageData(oData, 0, 0);
-
-                // Ääriviiva piirretään AINA keskuksen PÄÄLLE samalle kankaalle
                 ctx.drawImage(oCanvas, 0, 0);
             }
 
@@ -856,23 +873,19 @@
                     piirraGradient(bodyCtx, canvas.width, canvas.height);
                 }
 
-                // KUVIOT: V-, K- ja E-geenien yhteispeli selkeillä kontrasteilla
                 if (opts.kuviotyyppi !== "eikuviota") {
-                    
-                    // K-GEENI (ÄÄRIVIIVAT) - Selvät erot KK, Kk, kk välillä
                     let outlineTummennus = 0;
                     let outlineOnkoVaaleampi = false;
 
                     if (opts.pentuK === "KK") {
-                        outlineTummennus = 90;  // Erittäin tumma
+                        outlineTummennus = 90;
                     } else if (opts.pentuK === "Kk") {
-                        outlineTummennus = 50;  // Perus tumma (aiempi toimiva)
+                        outlineTummennus = 50;
                     } else {
-                        outlineTummennus = 50;  // kk -> Vaaleampi / pastellinen ääriviiva
+                        outlineTummennus = 50;
                         outlineOnkoVaaleampi = true;
                     }
 
-                    // E-GEENI / V-GEENI (KESKUSTA) - Selvät erot EE, Ee, ee välillä
                     let centerTummennus = 0;
                     let centerOnkoVaalea = false;
 
@@ -881,13 +894,13 @@
                         centerOnkoVaalea = outlineOnkoVaaleampi;
                     } else {
                         if (opts.pentuE === "EE") {
-                            centerTummennus = 60;   // Paljon tummempi kuin Ee, selvä ero
+                            centerTummennus = 60;
                             centerOnkoVaalea = false;
                         } else if (opts.pentuE === "Ee") {
-                            centerTummennus = 20;   // Kevyesti haalea, lähellä kehoa
+                            centerTummennus = 20;
                             centerOnkoVaalea = false;
                         } else {
-                            centerTummennus = 50;   // ee -> Kehoa vaaleampi pastelli
+                            centerTummennus = 50;
                             centerOnkoVaalea = true;
                         }
                     }
