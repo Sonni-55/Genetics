@@ -639,7 +639,7 @@
                 document.getElementById("tulos").innerText = 
                     `Genotyyppi: ${currentGenotype}\n` +
                     `Silmät: ${pentuEyeColor} | Nahka: ${pentuSkinColor} | Nenä: ${pentuNose}\n` +
-                    `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} ${onkoVaaleaKeskus ? "(vv haalea kuvion keskus)" : "(V_ tasavärinen kuvio)"}`;
+                    `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} ${onkoVaaleaKeskus ? "(vv vaalea kuvion keskus)" : "(V_ tasavärinen kuvio)"}`;
 
                 let karvanPohja = onkoKihara ? "Untitled309_20261008214953.png" : "Untitled309_20261008214944.png";
                 let ihoTiedosto = onkoKihara ? "Untitled309_20261009185045.png" : earsAndPawsSkinFile;
@@ -789,7 +789,6 @@
 
                 // KUVIOT (Raidat, täplät, ocelot)
                 if (opts.kuviotyyppi !== "eikuviota") {
-                    // Luodaan erilliset maski-canvakset ääriviivoille ja sisustavärille
                     const outlineMaskCanvas = document.createElement("canvas");
                     outlineMaskCanvas.width = canvas.width; outlineMaskCanvas.height = canvas.height;
                     const outCtx = outlineMaskCanvas.getContext("2d");
@@ -799,8 +798,8 @@
                     const colCtx = colorMaskCanvas.getContext("2d");
 
                     function lisaaKuvioMaskeihin(imgColor, imgOutline) {
-                        if (imgOutline) outCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
                         if (imgColor) colCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
+                        if (imgOutline) outCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
                     }
 
                     if (opts.kuvioLimbs) lisaaKuvioMaskeihin(imgLimbsColor, imgLimbsOutline);
@@ -812,14 +811,26 @@
                     }
 
                     if (opts.onkoVaaleaKeskus) {
-                        // vv -GEENI:
-                        // Sisus (color) tummennetaan vain kevyesti (+20 tummennus), jotta se on haalea mutta turkkia tummempi
-                        tummennaPikseleittain(bodyCtx, colorMaskCanvas, canvas.width, canvas.height, 20);
-                        // Ääriviivat (outline) tummennetaan voimakkaasti (+55 tummennus)
-                        tummennaPikseleittain(bodyCtx, outlineMaskCanvas, canvas.width, canvas.height, 55);
+                        // vv-GEENI:
+                        // 1. Ensin tummennetaan sisus (color) kevyesti, jotta se on haalea keskusta
+                        tummennaPikseleittain(bodyCtx, colorMaskCanvas, canvas.width, canvas.height, 22);
+
+                        // 2. Sen JÄLKEEN piirretään ääriviivat (outline) omalla tummemmalla vahvuudellaan TÄYSIN PEITTÄVÄSTI PÄÄLLE
+                        // Luodaan erillinen tummennettu canvas ääriviivoille, joka liitetään 100% näkyvyydellä
+                        const outlineDrawCanvas = document.createElement("canvas");
+                        outlineDrawCanvas.width = canvas.width; outlineDrawCanvas.height = canvas.height;
+                        const outDrawCtx = outlineDrawCanvas.getContext("2d");
+                        outDrawCtx.drawImage(bodyCanvas, 0, 0);
+                        tummennaPikseleittain(outDrawCtx, outlineMaskCanvas, canvas.width, canvas.height, 55);
+
+                        // Leikataan ääriviivat vain outline-maskin alueelle ja piirretään suoraan kehon päälle ilman saumojen tummennuksia
+                        outDrawCtx.globalCompositeOperation = "destination-in";
+                        outDrawCtx.drawImage(outlineMaskCanvas, 0, 0);
+
+                        bodyCtx.globalCompositeOperation = "source-over";
+                        bodyCtx.drawImage(outlineDrawCanvas, 0, 0);
                     } else {
                         // V_ -GEENI (Tasavärinen kuvio):
-                        // Molemmat kerrokset tummennetaan täysin samaan tasoon (+48 tummennus)
                         const combinedMask = document.createElement("canvas");
                         combinedMask.width = canvas.width; combinedMask.height = canvas.height;
                         const combCtx = combinedMask.getContext("2d");
