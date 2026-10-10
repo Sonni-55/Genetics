@@ -29,6 +29,12 @@
             grid-template-columns: repeat(2, 1fr);
             gap: 8px;
         }
+        .grid-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
         label {
             font-size: 9px;
             font-weight: bold;
@@ -80,9 +86,11 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            margin-top: 12px;
             padding: 12px;
             font-size: 15px;
+        }
+        .btn-random {
+            background-color: #ff9500;
         }
         .btn-download {
             background-color: #34c759;
@@ -112,7 +120,7 @@
         <h2>Vanhempien geenit</h2>
         
         <h3>Isä</h3>
-        <div class="grid">
+        <div class="grid" id="isa_geenit">
             <div>
                 <label>M (Harja)</label>
                 <select id="isa_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
@@ -199,7 +207,7 @@
         </div>
 
         <h3 style="margin-top: 15px;">Emä</h3>
-        <div class="grid">
+        <div class="grid" id="ema_geenit">
             <div>
                 <label>M (Harja)</label>
                 <select id="ema_m"><option>MM</option><option selected>Mm</option><option>mm</option></select>
@@ -321,7 +329,11 @@
             </div>
         </div>
 
-        <button onclick="arvoPentu()">Arvo pentu!</button>
+        <div class="grid-buttons">
+            <button class="btn-random" onclick="randomisoiVanhemmat(false)">Randomisoi isä</button>
+            <button class="btn-random" onclick="randomisoiVanhemmat(true)">Randomisoi molemmat</button>
+        </div>
+        <button onclick="arvoPentu()" style="margin-top: 8px;">Arvo pentu!</button>
     </div>
 
     <div class="card">
@@ -411,6 +423,45 @@
         document.getElementById("isa_skin_hex").addEventListener("input", (e) => { if (/^#[0-9A-F]{6}$/i.test(e.target.value)) document.getElementById("isa_skin").value = e.target.value; });
         document.getElementById("ema_skin").addEventListener("input", (e) => { document.getElementById("ema_skin_hex").value = e.target.value.toUpperCase(); });
         document.getElementById("ema_skin_hex").addEventListener("input", (e) => { if (/^#[0-9A-F]{6}$/i.test(e.target.value)) document.getElementById("ema_skin").value = e.target.value; });
+
+        function randomisoiVanhemmat(molemmat = false) {
+            const etuliitteet = molemmat ? ["isa_", "ema_"] : ["isa_"];
+            
+            etuliitteet.forEach(etuliite => {
+                const selectit = document.querySelectorAll(`#${etuliite}geenit select, #${etuliite}nose`);
+                selectit.forEach(sel => {
+                    const vaihtoehdot = sel.options;
+                    const satunnainenIndeksi = Math.floor(Math.random() * vaihtoehdot.length);
+                    sel.selectedIndex = satunnainenIndeksi;
+                });
+            });
+
+            // Arvotaan myös satunnaiset värit silmille ja nahalle
+            const satunnainenHex = () => "#" + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0').toUpperCase();
+            
+            if (!molemmat || Math.random() < 0.5) {
+                let v1 = satunnainenHex();
+                document.getElementById("isa_eyes").value = v1;
+                document.getElementById("isa_eyes_hex").value = v1;
+            }
+            if (molemmat || Math.random() < 0.5) {
+                let v2 = satunnainenHex();
+                document.getElementById("ema_eyes").value = v2;
+                document.getElementById("ema_eyes_hex").value = v2;
+            }
+            if (!molemmat || Math.random() < 0.5) {
+                let v3 = satunnainenHex();
+                document.getElementById("isa_skin").value = v3;
+                document.getElementById("isa_skin_hex").value = v3;
+            }
+            if (molemmat || Math.random() < 0.5) {
+                let v4 = satunnainenHex();
+                document.getElementById("ema_skin").value = v4;
+                document.getElementById("ema_skin_hex").value = v4;
+            }
+
+            arvoPentu();
+        }
 
         function hexToRgb(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -656,7 +707,6 @@
                 let onkoExtraKorvat = kuvioFace && (Math.random() < 0.5);
                 let onkoExtraKuono  = kuvioFace && (Math.random() < 0.5);
 
-                // Muodostetaan fenotyyppiteksti ilman geenikirjaimia
                 let perusVarinNimi = onkoDiluutio ? "Sininen" : "Musta";
                 if (pentuB.includes("bb")) perusVarinNimi = onkoDiluutio ? "Lila" : "Suklaa";
                 if (pentuB === "b1b1") perusVarinNimi = onkoDiluutio ? "Vaalea kaneli" : "Kaneli";
