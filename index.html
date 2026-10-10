@@ -458,6 +458,7 @@
             return `hsl(${dH}, ${dS}%, ${dL}%)`;
         }
 
+        // Palautettu alkuperäinen täpläfunktio korjatulla x/y-muuttujalla (ei siksakia)
         function piirraCalicoLaikut(ctx, width, height, vari, maara = 6) {
             ctx.fillStyle = vari;
             for (let i = 0; i < maara; i++) {
@@ -481,7 +482,8 @@
                 for (let j = 0; j < pisteita; j++) {
                     let nykyinen = pisteet[j];
                     let seuraava = pisteet[(j + 1) % pisteita];
-                    ctx.quadraticCurveTo(nykyinen.x, nykyinen.y, (nykyinen.x + seuraava.x) / 2, (nykyinen.x + seuraava.y) / 2);
+                    // Korjattu: (nykyinen.x + seuraava.y) -> (nykyinen.y + seuraava.y)
+                    ctx.quadraticCurveTo(nykyinen.x, nykyinen.y, (nykyinen.x + seuraava.x) / 2, (nykyinen.y + seuraava.y) / 2);
                 }
                 ctx.closePath();
                 ctx.fill();
@@ -511,7 +513,7 @@
                 for (let j = 0; j < pisteita; j++) {
                     let nykyinen = pisteet[j];
                     let seuraava = pisteet[(j + 1) % pisteita];
-                    ctx.quadraticCurveTo(nykyinen.x, nykyinen.y, (nykyinen.x + seuraava.x) / 2, (nykyinen.x + seuraava.y) / 2);
+                    ctx.quadraticCurveTo(nykyinen.x, nykyinen.y, (nykyinen.x + seuraava.x) / 2, (nykyinen.y + seuraava.y) / 2);
                 }
                 ctx.closePath();
                 ctx.fill();
@@ -698,7 +700,7 @@
             canvasCtx.putImageData(imgData, 0, 0);
         }
 
-        function tummennaPikseleittain(bodyCtx, maskCanvas, width, height, tummennusAmount = 45) {
+        function levitaVaaleaKeskusKuvioille(bodyCtx, maskCanvas, width, height) {
             let bodyData = bodyCtx.getImageData(0, 0, width, height);
             let maskCtx = maskCanvas.getContext("2d");
             let maskData = maskCtx.getImageData(0, 0, width, height);
@@ -713,9 +715,12 @@
                     let g = bPixels[i + 1];
                     let b = bPixels[i + 2];
 
-                    bPixels[i]     = Math.max(0, r - tummennusAmount);
-                    bPixels[i + 1] = Math.max(0, g - tummennusAmount);
-                    bPixels[i + 2] = Math.max(0, b - tummennusAmount);
+                    let etäisyysKeskipisteestä = Math.abs((i / 4) % width - width / 2) / (width / 2);
+                    let vaalennusKerroin = 0.4 * (1 - etäisyysKeskipisteestä);
+
+                    bPixels[i]     = Math.min(255, r + (255 - r) * vaalennusKerroin);
+                    bPixels[i + 1] = Math.min(255, g + (255 - g) * vaalennusKerroin);
+                    bPixels[i + 2] = Math.min(255, b + (255 - b) * vaalennusKerroin);
                 }
             }
             bodyCtx.putImageData(bodyData, 0, 0);
@@ -810,7 +815,6 @@
                 bodyCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
                 bodyCtx.globalCompositeOperation = "source-in";
 
-                // Pääväri ja mahdolliset kilpikonnatäplät
                 bodyCtx.fillStyle = opts.kehoVari;
                 bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -819,13 +823,11 @@
                     piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.laikkavari, 8);
                 }
 
-                // GRADIENTTI
                 if (opts.onkoGradient) {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraGradient(bodyCtx, canvas.width, canvas.height);
                 }
 
-                // V-GEENIN KESKUSVARJO (Vain jos vv)
                 if (opts.onkoVaaleaKeskus) {
                     const centerCanvas = document.createElement("canvas");
                     centerCanvas.width = canvas.width; 
@@ -853,55 +855,32 @@
                     bodyCtx.restore();
                 }
 
-                // KUVIOT (Raidat, täplät, ocelot)
                 if (opts.kuviotyyppi !== "eikuviota") {
-                    if (opts.onkoVaaleaKeskus) {
-                        // vv-geenille: Ääriviivat ja täyttö yhdistetään silti YHTEEN peittävään maskiin 
-                        // niin, että reunat pysyvät 100% tummina ja selkeinä ilman läpinäkyvyysraitoja.
-                        const combinedMaskCanvas = document.createElement("canvas");
-                        combinedMaskCanvas.width = canvas.width; combinedMaskCanvas.height = canvas.height;
-                        const mCtx = combinedMaskCanvas.getContext("2d");
+                    const combinedMaskCanvas = document.createElement("canvas");
+                    combinedMaskCanvas.width = canvas.width; combinedMaskCanvas.height = canvas.height;
+                    const mCtx = combinedMaskCanvas.getContext("2d");
 
-                        function lisaaKuvioKokoelmaan(imgColor, imgOutline) {
-                            if (imgColor) mCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
-                            if (imgOutline) mCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
-                        }
-
-                        if (opts.kuvioLimbs) lisaaKuvioKokoelmaan(imgLimbsColor, imgLimbsOutline);
-                        if (opts.kuvioBody) lisaaKuvioKokoelmaan(imgBodyColor, imgBodyOutline);
-                        if (opts.kuvioFace) {
-                            lisaaKuvioKokoelmaan(imgFaceColor, imgFaceOutline);
-                            if (imgExtraKorvat) lisaaKuvioKokoelmaan(imgExtraKorvat, null);
-                            if (imgExtraKuono)  lisaaKuvioKokoelmaan(imgExtraKuono, null);
-                        }
-
-                        teeTaysinPeittavaksi(mCtx, canvas.width, canvas.height);
-                        tummennaPikseleittainYhdellaMaskilla(bodyCtx, combinedMaskCanvas, canvas.width, canvas.height, 42);
-                    } else {
-                        // V_-geenille (tasavärinen)
-                        const combinedMaskCanvas = document.createElement("canvas");
-                        combinedMaskCanvas.width = canvas.width; combinedMaskCanvas.height = canvas.height;
-                        const mCtx = combinedMaskCanvas.getContext("2d");
-
-                        function lisaaKuvioKokoelmaan(imgColor, imgOutline) {
-                            if (imgColor) mCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
-                            if (imgOutline) mCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
-                        }
-
-                        if (opts.kuvioLimbs) lisaaKuvioKokoelmaan(imgLimbsColor, imgLimbsOutline);
-                        if (opts.kuvioBody) lisaaKuvioKokoelmaan(imgBodyColor, imgBodyOutline);
-                        if (opts.kuvioFace) {
-                            lisaaKuvioKokoelmaan(imgFaceColor, imgFaceOutline);
-                            if (imgExtraKorvat) lisaaKuvioKokoelmaan(imgExtraKorvat, null);
-                            if (imgExtraKuono)  lisaaKuvioKokoelmaan(imgExtraKuono, null);
-                        }
-
-                        teeTaysinPeittavaksi(mCtx, canvas.width, canvas.height);
-                        tummennaPikseleittainYhdellaMaskilla(bodyCtx, combinedMaskCanvas, canvas.width, canvas.height, 42);
+                    function lisaaKuvioKokoelmaan(imgColor, imgOutline) {
+                        if (imgColor) mCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
+                        if (imgOutline) mCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
                     }
+
+                    if (opts.kuvioLimbs) lisaaKuvioKokoelmaan(imgLimbsColor, imgLimbsOutline);
+                    if (opts.kuvioBody) lisaaKuvioKokoelmaan(imgBodyColor, imgBodyOutline);
+                    if (opts.kuvioFace) {
+                        lisaaKuvioKokoelmaan(imgFaceColor, imgFaceOutline);
+                        if (imgExtraKorvat) lisaaKuvioKokoelmaan(imgExtraKorvat, null);
+                        if (imgExtraKuono)  lisaaKuvioKokoelmaan(imgExtraKuono, null);
+                    }
+
+                    if (opts.onkoVaaleaKeskus) {
+                        levitaVaaleaKeskusKuvioille(bodyCtx, combinedMaskCanvas, canvas.width, canvas.height);
+                    }
+
+                    teeTaysinPeittavaksi(mCtx, canvas.width, canvas.height);
+                    tummennaPikseleittainYhdellaMaskilla(bodyCtx, combinedMaskCanvas, canvas.width, canvas.height, 42);
                 }
 
-                // VALKOISET LAIKUT (SS / Ss) - ASETETAAN VASTA TÄSSÄ, JOTTA NE OVAT KAIKEN PÄÄLLÄ
                 if (opts.pentuS === "SS") {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraIsotValkoisetAlueet(bodyCtx, canvas.width, canvas.height, "#ffffff", 5);
@@ -917,11 +896,9 @@
                 ctx.drawImage(bodyCanvas, 0, 0);
             }
 
-            // VAIHE 2: KEHON ÄÄRIVIIVAT
             ctx.globalCompositeOperation = "source-over";
             if (imgViiva) ctx.drawImage(imgViiva, 0, 0, canvas.width, canvas.height);
 
-            // VAIHE 3: NAHKA
             if (imgNoseSkin || imgEarsAndPawsSkin) {
                 const tempSkinCanvas = document.createElement("canvas");
                 tempSkinCanvas.width = canvas.width; tempSkinCanvas.height = canvas.height;
@@ -938,7 +915,6 @@
                 ctx.drawImage(tempSkinCanvas, 0, 0);
             }
 
-            // VAIHE 4: HARJA
             if (imgPohjaHarja) {
                 const tempCanvas = document.createElement("canvas");
                 tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
@@ -954,7 +930,6 @@
             }
             if (imgViivaHarja) ctx.drawImage(imgViivaHarja, 0, 0, canvas.width, canvas.height);
 
-            // VAIHE 5: SILMÄT
             if (imgSilmät) {
                 const tempEyeCanvas = document.createElement("canvas");
                 tempEyeCanvas.width = canvas.width; tempEyeCanvas.height = canvas.height;
@@ -973,7 +948,6 @@
                 ctx.drawImage(imgSilmätLineArt, 0, 0, canvas.width, canvas.height);
             }
 
-            // VAIHE 6: NENÄ JA SUU
             if (imgNoseViiva) ctx.drawImage(imgNoseViiva, 0, 0, canvas.width, canvas.height);
             if (imgMouthLineart) ctx.drawImage(imgMouthLineart, 0, 0, canvas.width, canvas.height);
         }
