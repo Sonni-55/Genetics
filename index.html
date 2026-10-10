@@ -458,7 +458,6 @@
             return `hsl(${dH}, ${dS}%, ${dL}%)`;
         }
 
-        // Palautettu alkuperäinen täpläfunktio korjatulla x/y-muuttujalla (ei siksakia)
         function piirraCalicoLaikut(ctx, width, height, vari, maara = 6) {
             ctx.fillStyle = vari;
             for (let i = 0; i < maara; i++) {
@@ -482,7 +481,6 @@
                 for (let j = 0; j < pisteita; j++) {
                     let nykyinen = pisteet[j];
                     let seuraava = pisteet[(j + 1) % pisteita];
-                    // Korjattu: (nykyinen.x + seuraava.y) -> (nykyinen.y + seuraava.y)
                     ctx.quadraticCurveTo(nykyinen.x, nykyinen.y, (nykyinen.x + seuraava.x) / 2, (nykyinen.y + seuraava.y) / 2);
                 }
                 ctx.closePath();
@@ -641,7 +639,7 @@
                 document.getElementById("tulos").innerText = 
                     `Genotyyppi: ${currentGenotype}\n` +
                     `Silmät: ${pentuEyeColor} | Nahka: ${pentuSkinColor} | Nenä: ${pentuNose}\n` +
-                    `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} ${onkoVaaleaKeskus ? "(vv vaalea keskus)" : "(V_ tasavärinen)"}`;
+                    `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} ${onkoVaaleaKeskus ? "(vv vaalea keskus)" : "(V_ tummemmat reunat)"}`;
 
                 let karvanPohja = onkoKihara ? "Untitled309_20261008214953.png" : "Untitled309_20261008214944.png";
                 let ihoTiedosto = onkoKihara ? "Untitled309_20261009185045.png" : earsAndPawsSkinFile;
@@ -698,32 +696,6 @@
                 }
             }
             canvasCtx.putImageData(imgData, 0, 0);
-        }
-
-        function levitaVaaleaKeskusKuvioille(bodyCtx, maskCanvas, width, height) {
-            let bodyData = bodyCtx.getImageData(0, 0, width, height);
-            let maskCtx = maskCanvas.getContext("2d");
-            let maskData = maskCtx.getImageData(0, 0, width, height);
-
-            let bPixels = bodyData.data;
-            let mPixels = maskData.data;
-
-            for (let i = 0; i < bPixels.length; i += 4) {
-                let maskAlpha = mPixels[i + 3];
-                if (maskAlpha > 20) {
-                    let r = bPixels[i];
-                    let g = bPixels[i + 1];
-                    let b = bPixels[i + 2];
-
-                    let etäisyysKeskipisteestä = Math.abs((i / 4) % width - width / 2) / (width / 2);
-                    let vaalennusKerroin = 0.4 * (1 - etäisyysKeskipisteestä);
-
-                    bPixels[i]     = Math.min(255, r + (255 - r) * vaalennusKerroin);
-                    bPixels[i + 1] = Math.min(255, g + (255 - g) * vaalennusKerroin);
-                    bPixels[i + 2] = Math.min(255, b + (255 - b) * vaalennusKerroin);
-                }
-            }
-            bodyCtx.putImageData(bodyData, 0, 0);
         }
 
         function tummennaPikseleittainYhdellaMaskilla(bodyCtx, combinedMaskCanvas, width, height, tummennusAmount = 45) {
@@ -828,31 +800,12 @@
                     piirraGradient(bodyCtx, canvas.width, canvas.height);
                 }
 
-                if (opts.onkoVaaleaKeskus) {
-                    const centerCanvas = document.createElement("canvas");
-                    centerCanvas.width = canvas.width; 
-                    centerCanvas.height = canvas.height;
-                    const centerCtx = centerCanvas.getContext("2d");
-
-                    centerCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
-                    centerCtx.globalCompositeOperation = "source-in";
-
-                    let grad = centerCtx.createRadialGradient(
-                        canvas.width / 2, canvas.height / 2, 20, 
-                        canvas.width / 2, canvas.height / 2, canvas.width / 2
-                    );
-                    grad.addColorStop(0, "rgba(255, 255, 255, 0.85)");
-                    grad.addColorStop(0.6, "rgba(255, 255, 255, 0.3)");
-                    grad.addColorStop(1, "rgba(255, 255, 255, 0.0)");
-
-                    centerCtx.fillStyle = grad;
-                    centerCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    bodyCtx.save();
-                    bodyCtx.globalCompositeOperation = "source-atop";
-                    bodyCtx.globalAlpha = 0.8;
-                    bodyCtx.drawImage(centerCanvas, 0, 0);
-                    bodyCtx.restore();
+                // V_ (Vaikuttaa toisin päin: jos ei ole vv, eli V_ on kyseessä, keho tai sen reunat/keskusta on tummempi, tai vv tekee keskiöstä vaaleamman)
+                // Käännetään logiikka: Jos EI OLE vv (eli on V_), tehdään koko kehosta kauttaaltaan hieman tummempi. Jos on vv, keho pysyy normaalina vaaleampana pohjana ja vain kuviot/reunat tummuvat!
+                if (!opts.onkoVaaleaKeskus) {
+                    // V_ geeni tekee koko kehosta tasaisen tummemman
+                    bodyCtx.fillStyle = "rgba(0, 0, 0, 0.18)";
+                    bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
                 }
 
                 if (opts.kuviotyyppi !== "eikuviota") {
@@ -873,12 +826,11 @@
                         if (imgExtraKuono)  lisaaKuvioKokoelmaan(imgExtraKuono, null);
                     }
 
-                    if (opts.onkoVaaleaKeskus) {
-                        levitaVaaleaKeskusKuvioille(bodyCtx, combinedMaskCanvas, canvas.width, canvas.height);
-                    }
-
                     teeTaysinPeittavaksi(mCtx, canvas.width, canvas.height);
-                    tummennaPikseleittainYhdellaMaskilla(bodyCtx, combinedMaskCanvas, canvas.width, canvas.height, 42);
+                    
+                    // Sekä vv että V_ tapauksissa kuvioiden/ääriviivojen alueet tummennetaan, mutta vv:llä pohja pysyy vaaleampana!
+                    let tummennusVoimakkuus = opts.onkoVaaleaKeskus ? 55 : 42;
+                    tummennaPikseleittainYhdellaMaskilla(bodyCtx, combinedMaskCanvas, canvas.width, canvas.height, tummennusVoimakkuus);
                 }
 
                 if (opts.pentuS === "SS") {
