@@ -639,7 +639,7 @@
                 document.getElementById("tulos").innerText = 
                     `Genotyyppi: ${currentGenotype}\n` +
                     `Silmät: ${pentuEyeColor} | Nahka: ${pentuSkinColor} | Nenä: ${pentuNose}\n` +
-                    `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} ${onkoVaaleaKeskus ? "(vv vaalea kuvion keskusta)" : "(V_ tasavärinen kuvio)"}`;
+                    `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} ${onkoVaaleaKeskus ? "(vv haalea kuvion keskus)" : "(V_ tasavärinen kuvio)"}`;
 
                 let karvanPohja = onkoKihara ? "Untitled309_20261008214953.png" : "Untitled309_20261008214944.png";
                 let ihoTiedosto = onkoKihara ? "Untitled309_20261009185045.png" : earsAndPawsSkinFile;
@@ -685,22 +685,9 @@
             });
         }
 
-        function teeTaysinPeittavaksi(canvasCtx, width, height) {
-            let imgData = canvasCtx.getImageData(0, 0, width, height);
-            let data = imgData.data;
-            for (let i = 3; i < data.length; i += 4) {
-                if (data[i] > 20) {
-                    data[i] = 255;
-                } else {
-                    data[i] = 0;
-                }
-            }
-            canvasCtx.putImageData(imgData, 0, 0);
-        }
-
-        function tummennaPikseleittainYhdellaMaskilla(bodyCtx, combinedMaskCanvas, width, height, tummennusAmount = 45) {
+        function tummennaPikseleittain(bodyCtx, maskCanvas, width, height, tummennusAmount = 45) {
             let bodyData = bodyCtx.getImageData(0, 0, width, height);
-            let maskCtx = combinedMaskCanvas.getContext("2d");
+            let maskCtx = maskCanvas.getContext("2d");
             let maskData = maskCtx.getImageData(0, 0, width, height);
 
             let bPixels = bodyData.data;
@@ -716,58 +703,6 @@
                     bPixels[i]     = Math.max(0, r - tummennusAmount);
                     bPixels[i + 1] = Math.max(0, g - tummennusAmount);
                     bPixels[i + 2] = Math.max(0, b - tummennusAmount);
-                }
-            }
-            bodyCtx.putImageData(bodyData, 0, 0);
-        }
-
-        // Uusi funktio vv-geenille: tekee kuvioiden sisuksista läpikuultavampia (vaaleampia)
-        function teeKuvioidenKeskustastaVaaleampia(bodyCtx, combinedMaskCanvas, width, height) {
-            let bodyData = bodyCtx.getImageData(0, 0, width, height);
-            let maskCtx = combinedMaskCanvas.getContext("2d");
-            let maskData = maskCtx.getImageData(0, 0, width, height);
-
-            let bPixels = bodyData.data;
-            let mPixels = maskData.data;
-
-            // Lasketaan maskille yksinkertainen sisä- ja ulkoreunojen erottelu.
-            // Koska halutaan vaalentaa vain kuvion keskustaa, voimme arvioida jokaisen kuvion pikselin etäisyyttä sen reunoista 
-            // tai käyttää satunnaisuutta / yksinkertaista suodatusta.
-            // Tehdään tässä pehmeä pyörrepohjainen haalennus kuvioiden keskiosiin:
-            for (let y = 0; y < height; y += 3) {
-                for (let x = 0; x < width; x += 3) {
-                    let idx = (y * width + x) * 4;
-                    if (mPixels[idx + 3] > 180) { // Oltava syvällä kuviossa (ei aivan reunalla)
-                        // Tarkistetaan onko tämä pikseli lähellä kuvion reunaa (etsitään läpinäkyviä tai heikompia naapureita)
-                        let onReunalla = false;
-                        for (let dy = -10; dy <= 10; dy += 5) {
-                            for (let dx = -10; dx <= 10; dx += 5) {
-                                let nx = x + dx, ny = y + dy;
-                                if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                                    let nIdx = (ny * width + nx) * 4;
-                                    if (mPixels[nIdx + 3] < 50) {
-                                        onReunalla = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (onReunalla) break;
-                        }
-
-                        // Jos ei ole aivan reunalla, se on kuvion sisusta -> haalistetaan / tehdään läpikuultavammaksi kohti pohjaväriä!
-                        if (!onReunalla) {
-                            for (let py = y; py < Math.min(y + 3, height); py++) {
-                                for (let px = x; px < Math.min(x + 3, width); px++) {
-                                    let pIdx = (py * width + px) * 4;
-                                    if (mPixels[pIdx + 3] > 50) {
-                                        bPixels[pIdx]     = Math.min(255, bPixels[pIdx] + 45);
-                                        bPixels[pIdx + 1] = Math.min(255, bPixels[pIdx + 1] + 45);
-                                        bPixels[pIdx + 2] = Math.min(255, bPixels[pIdx + 2] + 45);
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
             }
             bodyCtx.putImageData(bodyData, 0, 0);
@@ -852,33 +787,47 @@
                     piirraGradient(bodyCtx, canvas.width, canvas.height);
                 }
 
+                // KUVIOT (Raidat, täplät, ocelot)
                 if (opts.kuviotyyppi !== "eikuviota") {
-                    const combinedMaskCanvas = document.createElement("canvas");
-                    combinedMaskCanvas.width = canvas.width; combinedMaskCanvas.height = canvas.height;
-                    const mCtx = combinedMaskCanvas.getContext("2d");
+                    // Luodaan erilliset maski-canvakset ääriviivoille ja sisustavärille
+                    const outlineMaskCanvas = document.createElement("canvas");
+                    outlineMaskCanvas.width = canvas.width; outlineMaskCanvas.height = canvas.height;
+                    const outCtx = outlineMaskCanvas.getContext("2d");
 
-                    function lisaaKuvioKokoelmaan(imgColor, imgOutline) {
-                        if (imgColor) mCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
-                        if (imgOutline) mCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
+                    const colorMaskCanvas = document.createElement("canvas");
+                    colorMaskCanvas.width = canvas.width; colorMaskCanvas.height = canvas.height;
+                    const colCtx = colorMaskCanvas.getContext("2d");
+
+                    function lisaaKuvioMaskeihin(imgColor, imgOutline) {
+                        if (imgOutline) outCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
+                        if (imgColor) colCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
                     }
 
-                    if (opts.kuvioLimbs) lisaaKuvioKokoelmaan(imgLimbsColor, imgLimbsOutline);
-                    if (opts.kuvioBody) lisaaKuvioKokoelmaan(imgBodyColor, imgBodyOutline);
+                    if (opts.kuvioLimbs) lisaaKuvioMaskeihin(imgLimbsColor, imgLimbsOutline);
+                    if (opts.kuvioBody) lisaaKuvioMaskeihin(imgBodyColor, imgBodyOutline);
                     if (opts.kuvioFace) {
-                        lisaaKuvioKokoelmaan(imgFaceColor, imgFaceOutline);
-                        if (imgExtraKorvat) lisaaKuvioKokoelmaan(imgExtraKorvat, null);
-                        if (imgExtraKuono)  lisaaKuvioKokoelmaan(imgExtraKuono, null);
+                        lisaaKuvioMaskeihin(imgFaceColor, imgFaceOutline);
+                        if (imgExtraKorvat) outCtx.drawImage(imgExtraKorvat, 0, 0, canvas.width, canvas.height);
+                        if (imgExtraKuono)  outCtx.drawImage(imgExtraKuono, 0, 0, canvas.width, canvas.height);
                     }
 
-                    // Tummennetaan ensin koko kuvioalue tasaisesti
-                    tummennaPikseleittainYhdellaMaskilla(bodyCtx, combinedMaskCanvas, canvas.width, canvas.height, 45);
-
-                    // Jos on vv (vaalea/läpikuultava keskusta), vaalennetaan kuvioiden sisäosat takaisin
                     if (opts.onkoVaaleaKeskus) {
-                        teeKuvioidenKeskustastaVaaleampia(bodyCtx, combinedMaskCanvas, canvas.width, canvas.height);
-                    }
+                        // vv -GEENI:
+                        // Sisus (color) tummennetaan vain kevyesti (+20 tummennus), jotta se on haalea mutta turkkia tummempi
+                        tummennaPikseleittain(bodyCtx, colorMaskCanvas, canvas.width, canvas.height, 20);
+                        // Ääriviivat (outline) tummennetaan voimakkaasti (+55 tummennus)
+                        tummennaPikseleittain(bodyCtx, outlineMaskCanvas, canvas.width, canvas.height, 55);
+                    } else {
+                        // V_ -GEENI (Tasavärinen kuvio):
+                        // Molemmat kerrokset tummennetaan täysin samaan tasoon (+48 tummennus)
+                        const combinedMask = document.createElement("canvas");
+                        combinedMask.width = canvas.width; combinedMask.height = canvas.height;
+                        const combCtx = combinedMask.getContext("2d");
+                        combCtx.drawImage(colorMaskCanvas, 0, 0);
+                        combCtx.drawImage(outlineMaskCanvas, 0, 0);
 
-                    teeTaysinPeittavaksi(mCtx, canvas.width, canvas.height);
+                        tummennaPikseleittain(bodyCtx, combinedMask, canvas.width, canvas.height, 48);
+                    }
                 }
 
                 if (opts.pentuS === "SS") {
