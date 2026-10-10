@@ -661,6 +661,23 @@
             canvasCtx.putImageData(imgData, 0, 0);
         }
 
+        function tummennaHexTaiRgb(hexOrRgb, maara = 35) {
+            let r = 100, g = 50, b = 20;
+            if (hexOrRgb.startsWith("hsl")) {
+                let dummy = document.createElement("div");
+                dummy.style.color = hexOrRgb;
+                document.body.appendChild(dummy);
+                let computed = getComputedStyle(dummy).color;
+                document.body.removeChild(dummy);
+                let match = computed.match(/\d+/g);
+                if (match) { r = parseInt(match[0]); g = parseInt(match[1]); b = parseInt(match[2]); }
+            } else {
+                let rgb = hexToRgb(hexOrRgb);
+                r = rgb.r; g = rgb.g; b = rgb.b;
+            }
+            return `rgb(${Math.max(0, r - maara)}, ${Math.max(0, g - maara)}, ${Math.max(0, b - maara)})`;
+        }
+
         async function piirraErillinenHarjaPentu(opts) {
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
@@ -718,7 +735,7 @@
                 lataaKuva(opts.extraKuono)
             ]);
 
-            // VAIHE 1: KEHO POHJAVÄRILLE JA VALKOISUUDELLE (SS vs Ss vs ss)
+            // VAIHE 1: KEHO POHJAVÄRILLE JA (V-geeni, Gradientti, Kuviot)
             if (imgPohja) {
                 const bodyCanvas = document.createElement("canvas");
                 bodyCanvas.width = canvas.width; bodyCanvas.height = canvas.height;
@@ -727,39 +744,40 @@
                 bodyCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
                 bodyCtx.globalCompositeOperation = "source-in";
 
-                if (opts.pentuS === "SS") {
-                    // SS: Valkoinen tausta, jolla pääväri (ja laikut) ovat läikkäisinä
-                    bodyCtx.fillStyle = "#ffffff";
-                    bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
+                bodyCtx.fillStyle = opts.kehoVari;
+                bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
 
+                if (opts.laikkavari) {
                     bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.kehoVari, 6);
-                    if (opts.laikkavari) {
-                        piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.laikkavari, 4);
-                    }
-                } else {
-                    // Ss tai ss: Pääväri pohjana
-                    bodyCtx.fillStyle = opts.kehoVari;
-                    bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    if (opts.laikkavari) {
-                        bodyCtx.globalCompositeOperation = "source-atop";
-                        piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.laikkavari, 8);
-                    }
-
-                    if (opts.pentuS === "Ss") {
-                        bodyCtx.globalCompositeOperation = "source-atop";
-                        piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 3);
-                    }
+                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.laikkavari, 8);
                 }
 
-                // GRADIENTTI
                 if (opts.onkoGradient) {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraGradient(bodyCtx, canvas.width, canvas.height);
                 }
 
-                // KUVIOT: Puhdas maskaus (multiply-pohjainen varjostus, mukautuu mihin tahansa alla olevaan väriin)
+                // V-GEENIN KESKUSVARJO (Asetetaan vain vv-geenille vaalea keskusvaikutus)
+                if (opts.centerOpacity < 1.0) {
+                    const centerCanvas = document.createElement("canvas");
+                    centerCanvas.width = canvas.width; centerCanvas.height = canvas.height;
+                    const centerCtx = centerCanvas.getContext("2d");
+                    centerCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
+                    centerCtx.globalCompositeOperation = "source-in";
+                    let grad = centerCtx.createRadialGradient(canvas.width/2, canvas.height/2, 50, canvas.width/2, canvas.height/2, canvas.width/1.5);
+                    grad.addColorStop(0, "rgba(255, 255, 255, 0.6)");
+                    grad.addColorStop(1, "rgba(255, 255, 255, 0.0)");
+                    centerCtx.fillStyle = grad;
+                    centerCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    bodyCtx.save();
+                    bodyCtx.globalCompositeOperation = "source-atop";
+                    bodyCtx.globalAlpha = 1.0 - opts.centerOpacity;
+                    bodyCtx.drawImage(centerCanvas, 0, 0);
+                    bodyCtx.restore();
+                }
+
+                // KUVIOT (Raidat, täplät, ocelot) - Puhdas maskaus ilman rumia päällekkäisyysviivoja
                 if (opts.kuviotyyppi !== "eikuviota") {
                     const patternFillCanvas = document.createElement("canvas");
                     patternFillCanvas.width = canvas.width; patternFillCanvas.height = canvas.height;
@@ -782,28 +800,38 @@
                         if (imgExtraKuono)  lisaaKuvioKokoelmaan(imgExtraKuono, null);
                     }
 
-                    // Muutetaan kuvioiden täyttö ja ääriviivat tummennusmaskeiksi
+                    // Lasketaan dynaamisesti tummennetut värit pohjan perusteella
+                    let dynamicFillColor = tummennaHexTaiRgb(opts.kehoVari, 35);
+                    let dynamicOutlineColor = tummennaHexTaiRgb(opts.kehoVari, 65);
+
                     fillCtx.globalCompositeOperation = "source-in";
-                    fillCtx.fillStyle = "rgb(180, 180, 180)";
+                    fillCtx.fillStyle = dynamicFillColor;
                     fillCtx.fillRect(0, 0, canvas.width, canvas.height);
 
                     teeTaysinPeittavaksi(outlineCtx, canvas.width, canvas.height);
                     outlineCtx.globalCompositeOperation = "source-in";
-                    outlineCtx.fillStyle = "rgb(100, 100, 100)";
+                    outlineCtx.fillStyle = dynamicOutlineColor;
                     outlineCtx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    // Piirretään maskit kehon päälle multiply-tilassa
+                    // Piirretään suoraan kehon päälle ilman virheitä
                     bodyCtx.save();
-                    bodyCtx.globalCompositeOperation = "multiply";
-                    bodyCtx.globalAlpha = opts.centerOpacity;
+                    bodyCtx.globalCompositeOperation = "source-atop";
                     bodyCtx.drawImage(patternFillCanvas, 0, 0);
                     bodyCtx.restore();
 
                     bodyCtx.save();
-                    bodyCtx.globalCompositeOperation = "multiply";
-                    bodyCtx.globalAlpha = 1.0;
+                    bodyCtx.globalCompositeOperation = "source-atop";
                     bodyCtx.drawImage(patternOutlineCanvas, 0, 0);
                     bodyCtx.restore();
+                }
+
+                // VALKOISET TÄPLÄT (S-geeni) - Asetettu AINA muiden kuvioiden ja gradienttien PÄÄLLE
+                if (opts.pentuS === "SS") {
+                    bodyCtx.globalCompositeOperation = "source-atop";
+                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 10);
+                } else if (opts.pentuS === "Ss") {
+                    bodyCtx.globalCompositeOperation = "source-atop";
+                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 3);
                 }
 
                 bodyCtx.globalCompositeOperation = "destination-in";
