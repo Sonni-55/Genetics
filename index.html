@@ -605,6 +605,7 @@
             let onkoExtraKorvat = kuvioFace && (Math.random() < 0.5);
             let onkoExtraKuono  = kuvioFace && (Math.random() < 0.5);
 
+            // Korjattu V-geenin tarkistus: Vain jos molemmat alleelit ovat 'v' eli pentuV === "vv"
             let onkoVaaleaKeskus = (pentuV === "vv");
 
             document.getElementById("tulos").innerText = 
@@ -665,9 +666,10 @@
             canvasCtx.putImageData(imgData, 0, 0);
         }
 
-        function tummennaPikseleittain(bodyCtx, maskCanvas, width, height, tummennusAmount = 45) {
+        // Yhdistetty ja siisti pikselikohtainen tummennus ilman erillisten tiedostojen päällekkäisyysvirheitä
+        function tummennaPikseleittainYhdellaMaskilla(bodyCtx, combinedMaskCanvas, width, height, tummennusAmount = 45) {
             let bodyData = bodyCtx.getImageData(0, 0, width, height);
-            let maskCtx = maskCanvas.getContext("2d");
+            let maskCtx = combinedMaskCanvas.getContext("2d");
             let maskData = maskCtx.getImageData(0, 0, width, height);
 
             let bPixels = bodyData.data;
@@ -745,7 +747,7 @@
                 lataaKuva(opts.extraKuono)
             ]);
 
-            // VAIHE 1: KEHO POHJAVÄRILLE JA (Gradientti & Kuviot)
+            // VAIHE 1: KEHO POHJAVÄRILLE, GRADIENTILLE JA KUPIOILLE (mutta ILMAN valkoisia täpliä vielä)
             if (imgPohja) {
                 const bodyCanvas = document.createElement("canvas");
                 bodyCanvas.width = canvas.width; bodyCanvas.height = canvas.height;
@@ -788,19 +790,15 @@
                     bodyCtx.restore();
                 }
 
-                // KUVIOT (Raidat, täplät, ocelot) - Puhtaat ääriviivaton/siisti maskaus ilman päällekkäisyysviivoja
+                // KUVIOT (Raidat, täplät, ocelot) - Yhdistetään täytöt ja outline yhdeksi maskiksi, jotta päällekkäisyysviivoja ei synny
                 if (opts.kuviotyyppi !== "eikuviota") {
-                    const fillMaskCanvas = document.createElement("canvas");
-                    fillMaskCanvas.width = canvas.width; fillMaskCanvas.height = canvas.height;
-                    const fCtx = fillMaskCanvas.getContext("2d");
-
-                    const outlineMaskCanvas = document.createElement("canvas");
-                    outlineMaskCanvas.width = canvas.width; outlineMaskCanvas.height = canvas.height;
-                    const oCtx = outlineMaskCanvas.getContext("2d");
+                    const combinedMaskCanvas = document.createElement("canvas");
+                    combinedMaskCanvas.width = canvas.width; combinedMaskCanvas.height = canvas.height;
+                    const mCtx = combinedMaskCanvas.getContext("2d");
 
                     function lisaaKuvioKokoelmaan(imgColor, imgOutline) {
-                        if (imgColor) fCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
-                        if (imgOutline) oCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
+                        if (imgColor) mCtx.drawImage(imgColor, 0, 0, canvas.width, canvas.height);
+                        if (imgOutline) mCtx.drawImage(imgOutline, 0, 0, canvas.width, canvas.height);
                     }
 
                     if (opts.kuvioLimbs) lisaaKuvioKokoelmaan(imgLimbsColor, imgLimbsOutline);
@@ -811,11 +809,10 @@
                         if (imgExtraKuono)  lisaaKuvioKokoelmaan(imgExtraKuono, null);
                     }
 
-                    teeTaysinPeittavaksi(fCtx, canvas.width, canvas.height);
-                    tummennaPikseleittain(bodyCtx, fillMaskCanvas, canvas.width, canvas.height, 35);
-
-                    teeTaysinPeittavaksi(oCtx, canvas.width, canvas.height);
-                    tummennaPikseleittain(bodyCtx, outlineMaskCanvas, canvas.width, canvas.height, 65);
+                    teeTaysinPeittavaksi(mCtx, canvas.width, canvas.height);
+                    
+                    // Tummennetaan yhtenäisellä maskilla suoraan altaan pikseleistä (ei multiply-sotkua)
+                    tummennaPikseleittainYhdellaMaskilla(bodyCtx, combinedMaskCanvas, canvas.width, canvas.height, 42);
                 }
 
                 // VALKOISET LAIKUT (SS / Ss) - Asetettu AINA muiden kuvioiden ja gradienttien PÄÄLLE
