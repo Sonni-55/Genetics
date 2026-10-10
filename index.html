@@ -459,7 +459,6 @@
             return `hsl(${dH}, ${dS}%, ${dL}%)`;
         }
 
-        // Korjattu valkoisten laikkujen piirto: Rajoitetaan määrää ja säilytetään pohjaväri näkyvissä
         function piirraCalicoLaikut(ctx, width, height, vari, maara = 6) {
             ctx.fillStyle = vari;
             for (let i = 0; i < maara; i++) {
@@ -562,7 +561,6 @@
                 }
             }
 
-            // HARJAN VÄRILOGIIKKA: Punainen geeni ja Valkoisuusgeeni
             if (onkoPunainenNakyy && Math.random() < 0.5) {
                 if (pentuH === "hh") {
                     variHarja = "#fce8a4";
@@ -571,7 +569,9 @@
                 }
             }
 
-            if (pentuS.includes("S") && Math.random() < 0.33) {
+            if (pentuS === "SS" && Math.random() < 0.5) {
+                variHarja = "#ffffff";
+            } else if (pentuS === "Ss" && Math.random() < 0.2) {
                 variHarja = "#ffffff";
             }
 
@@ -601,12 +601,13 @@
             let onkoExtraKorvat = kuvioFace && (Math.random() < 0.5);
             let onkoExtraKuono  = kuvioFace && (Math.random() < 0.5);
 
-            let centerOpacity = (pentuV === "vv") ? (0.50 + Math.random() * 0.40) : (0.91 + Math.random() * 0.09);
+            // V-geenin logiikka: Jos vv -> haalea keskus, muuten (VV tai Vv) sama sävy kuin reunat ja 100% peittävyys
+            let centerOpacity = (pentuV === "vv") ? (0.50 + Math.random() * 0.40) : 1.0;
 
             document.getElementById("tulos").innerText = 
                 `Genotyyppi: ${currentGenotype}\n` +
                 `Silmät: ${pentuEyeColor} | Nahka: ${pentuSkinColor} | Nenä: ${pentuNose}\n` +
-                `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} ${(pentuV === "vv") ? "(vv vaalea keskus)" : ""}`;
+                `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} ${(pentuV === "vv") ? "(vv vaalea keskus)" : "(V_ tasavärinen)"}`;
 
             let karvanPohja = onkoKihara ? "Untitled309_20261008214953.png" : "Untitled309_20261008214944.png";
             let ihoTiedosto = onkoKihara ? "Untitled309_20261009185045.png" : earsAndPawsSkinFile;
@@ -727,7 +728,6 @@
                 bodyCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
                 bodyCtx.globalCompositeOperation = "source-in";
 
-                // A) Pohjaväri
                 bodyCtx.fillStyle = opts.kehoVari;
                 bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -736,13 +736,12 @@
                     piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.laikkavari, 8);
                 }
 
-                // B) GRADIENTTI
                 if (opts.onkoGradient) {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraGradient(bodyCtx, canvas.width, canvas.height);
                 }
 
-                // C) KUVIOT
+                // KUVIOT: Korjattu kerrosjärjestys niin että ääriviivat ovat päällä eikä sotke kesustaa
                 function parseToRgb(colorStr) {
                     if (colorStr.startsWith("hsl")) {
                         let dummy = document.createElement("div");
@@ -757,11 +756,10 @@
                 }
 
                 let baseRgb = parseToRgb(opts.kehoVari);
-                let centerFactor = 0.40 + Math.random() * 0.30; 
-                let outlineFactor = 0.15 + Math.random() * 0.20;
+                // Muutettu niin, että kuviot ovat luonnostaan hieman pohjaväriä tummempia (kuten kissoilla)
+                let centerFactor = 0.70 + Math.random() * 0.15; 
 
                 let patternCenterColor = `rgb(${Math.round(baseRgb.r * centerFactor)}, ${Math.round(baseRgb.g * centerFactor)}, ${Math.round(baseRgb.b * centerFactor)})`;
-                let patternOutlineColor = `rgb(${Math.round(baseRgb.r * outlineFactor)}, ${Math.round(baseRgb.g * outlineFactor)}, ${Math.round(baseRgb.b * outlineFactor)})`;
 
                 const combinedCenterCanvas = document.createElement("canvas");
                 combinedCenterCanvas.width = canvas.width; combinedCenterCanvas.height = canvas.height;
@@ -784,7 +782,7 @@
                     if (imgExtraKuono)  lisaaKuvioKokoelmaan(imgExtraKuono, null);
                 }
 
-                // 1. Keskusta
+                // Piirretään kuvioiden täyttö värisävyllä
                 combinedCenterCtx.globalCompositeOperation = "source-in";
                 combinedCenterCtx.fillStyle = patternCenterColor;
                 combinedCenterCtx.fillRect(0, 0, canvas.width, canvas.height);
@@ -795,10 +793,13 @@
                 bodyCtx.drawImage(combinedCenterCanvas, 0, 0);
                 bodyCtx.restore();
 
-                // 2. Ääriviivat
+                // Ääriviivat piirretään tummempana, mutta erillisellä tasolla ettei värit vuoda ristiin
                 teeTaysinPeittavaksi(combinedOutlineCtx, canvas.width, canvas.height);
                 combinedOutlineCtx.globalCompositeOperation = "source-in";
-                combinedOutlineCtx.fillStyle = patternOutlineColor;
+                let outlineR = Math.max(0, baseRgb.r - 40);
+                let outlineG = Math.max(0, baseRgb.g - 40);
+                let outlineB = Math.max(0, baseRgb.b - 40);
+                combinedOutlineCtx.fillStyle = `rgb(${outlineR}, ${outlineG}, ${outlineB})`;
                 combinedOutlineCtx.fillRect(0, 0, canvas.width, canvas.height);
 
                 bodyCtx.save();
@@ -807,16 +808,15 @@
                 bodyCtx.drawImage(combinedOutlineCanvas, 0, 0);
                 bodyCtx.restore();
 
-                // D) VALKOISET LAIKUT (Korjattu: Ei peitä kokonaan)
+                // S-geenin mukainen valkoisuuden määrä (SS vs Ss vs ss)
                 if (opts.pentuS === "SS") {
                     bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 8);
-                } else if (opts.pentuS.includes("S")) {
+                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 10);
+                } else if (opts.pentuS === "Ss") {
                     bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 4);
+                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 3);
                 }
 
-                // EIKÄ päästetä kuvioita kehon pohjan ulkopuolelle!
                 bodyCtx.globalCompositeOperation = "destination-in";
                 bodyCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
 
@@ -828,7 +828,7 @@
             ctx.globalCompositeOperation = "source-over";
             if (imgViiva) ctx.drawImage(imgViiva, 0, 0, canvas.width, canvas.height);
 
-            // VAIHE 3: NAHKA (TASSUT + KORVAT + NENÄ)
+            // VAIHE 3: NAHKA
             if (imgNoseSkin || imgEarsAndPawsSkin) {
                 const tempSkinCanvas = document.createElement("canvas");
                 tempSkinCanvas.width = canvas.width; tempSkinCanvas.height = canvas.height;
@@ -861,7 +861,7 @@
             }
             if (imgViivaHarja) ctx.drawImage(imgViivaHarja, 0, 0, canvas.width, canvas.height);
 
-            // VAIHE 5: SILMÄT JA NIIDEN ÄÄRIVIIVAT (Korjattu: Näkyvät aina päällimmäisenä)
+            // VAIHE 5: SILMÄT
             if (imgSilmät) {
                 const tempEyeCanvas = document.createElement("canvas");
                 tempEyeCanvas.width = canvas.width; tempEyeCanvas.height = canvas.height;
@@ -880,7 +880,7 @@
                 ctx.drawImage(imgSilmätLineArt, 0, 0, canvas.width, canvas.height);
             }
 
-            // VAIHE 6: NENÄ JA SUU LINEART
+            // VAIHE 6: NENÄ JA SUU
             if (imgNoseViiva) ctx.drawImage(imgNoseViiva, 0, 0, canvas.width, canvas.height);
             if (imgMouthLineart) ctx.drawImage(imgMouthLineart, 0, 0, canvas.width, canvas.height);
         }
