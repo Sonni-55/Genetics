@@ -340,7 +340,6 @@
         };
 
         const earsAndPawsSkinFile = "Untitled309_20261009100644.png";
-
         const faceExtraKorvat = "Untitled311_20261009195258.png";
         const faceExtraKuono  = "Untitled311_20261009195304.png";
 
@@ -535,141 +534,145 @@
         }
 
         function arvoPentu() {
-            let pentuM = luoGenotyyppi(document.getElementById("isa_m").value, document.getElementById("ema_m").value);
-            let pentuS = luoGenotyyppi(document.getElementById("isa_s").value, document.getElementById("ema_s").value);
-            let pentuC = luoGenotyyppi(document.getElementById("isa_c").value, document.getElementById("ema_c").value);
-            let pentuB = luoGenotyyppi(document.getElementById("isa_b").value, document.getElementById("ema_b").value, "B");
-            let pentuD = luoGenotyyppi(document.getElementById("isa_d").value, document.getElementById("ema_d").value);
-            let pentuH = luoGenotyyppi(document.getElementById("isa_h").value, document.getElementById("ema_h").value);
-            let pentuO = luoGenotyyppi(document.getElementById("isa_o").value, document.getElementById("ema_o").value);
-            let pentuN = luoGenotyyppi(document.getElementById("isa_n").value, document.getElementById("ema_n").value);
-            let pentuG = luoGenotyyppi(document.getElementById("isa_g").value, document.getElementById("ema_g").value);
-            let pentuA = luoGenotyyppi(document.getElementById("isa_a").value, document.getElementById("ema_a").value, "A");
-            let pentuP = luoGenotyyppi(document.getElementById("isa_p").value, document.getElementById("ema_p").value);
-            let pentuR = luoGenotyyppi(document.getElementById("isa_r").value, document.getElementById("ema_r").value);
-            let pentuV = luoGenotyyppi(document.getElementById("isa_v").value, document.getElementById("ema_v").value);
+            try {
+                let pentuM = luoGenotyyppi(document.getElementById("isa_m").value, document.getElementById("ema_m").value);
+                let pentuS = luoGenotyyppi(document.getElementById("isa_s").value, document.getElementById("ema_s").value);
+                let pentuC = luoGenotyyppi(document.getElementById("isa_c").value, document.getElementById("ema_c").value);
+                let pentuB = luoGenotyyppi(document.getElementById("isa_b").value, document.getElementById("ema_b").value, "B");
+                let pentuD = luoGenotyyppi(document.getElementById("isa_d").value, document.getElementById("ema_d").value);
+                let pentuH = luoGenotyyppi(document.getElementById("isa_h").value, document.getElementById("ema_h").value);
+                let pentuO = luoGenotyyppi(document.getElementById("isa_o").value, document.getElementById("ema_o").value);
+                let pentuN = luoGenotyyppi(document.getElementById("isa_n").value, document.getElementById("ema_n").value);
+                let pentuG = luoGenotyyppi(document.getElementById("isa_g").value, document.getElementById("ema_g").value);
+                let pentuA = luoGenotyyppi(document.getElementById("isa_a").value, document.getElementById("ema_a").value, "A");
+                let pentuP = luoGenotyyppi(document.getElementById("isa_p").value, document.getElementById("ema_p").value);
+                let pentuR = luoGenotyyppi(document.getElementById("isa_r").value, document.getElementById("ema_r").value);
+                let pentuV = luoGenotyyppi(document.getElementById("isa_v").value, document.getElementById("ema_v").value);
 
-            let pentuEyeColor = arvoVariVanhemmilta(document.getElementById("isa_eyes").value.toUpperCase(), document.getElementById("ema_eyes").value.toUpperCase());
-            let pentuSkinColor = arvoVariVanhemmilta(document.getElementById("isa_skin").value.toUpperCase(), document.getElementById("ema_skin").value.toUpperCase());
-            let pentuNose = Math.random() < 0.5 ? document.getElementById("isa_nose").value : document.getElementById("ema_nose").value;
+                let pentuEyeColor = arvoVariVanhemmilta(document.getElementById("isa_eyes").value.toUpperCase(), document.getElementById("ema_eyes").value.toUpperCase());
+                let pentuSkinColor = arvoVariVanhemmilta(document.getElementById("isa_skin").value.toUpperCase(), document.getElementById("ema_skin").value.toUpperCase());
+                let pentuNose = Math.random() < 0.5 ? document.getElementById("isa_nose").value : document.getElementById("ema_nose").value;
 
-            currentGenotype = `${pentuM}_${pentuS}_${pentuC}_${pentuB}_${pentuD}_${pentuH}_${pentuO}_${pentuN}_${pentuG}_${pentuA}_${pentuP}_${pentuR}_${pentuV}`;
+                currentGenotype = `${pentuM}_${pentuS}_${pentuC}_${pentuB}_${pentuD}_${pentuH}_${pentuO}_${pentuN}_${pentuG}_${pentuA}_${pentuP}_${pentuR}_${pentuV}`;
 
-            let onkoHarja = pentuM.includes("M");
-            let onkoKihara = (pentuC === "cc");
-            let onkoGradient = (pentuG === "gg");
-            let onkoDiluutio = (pentuD === "dd");
+                let onkoHarja = pentuM.includes("M");
+                let onkoKihara = (pentuC === "cc");
+                let onkoGradient = (pentuG === "gg");
+                let onkoDiluutio = (pentuD === "dd");
 
-            let tummaHSL = onkoDiluutio 
-                ? (pentuB.includes("B") ? { h: 210, s: 15, l: 45 } : (pentuB === "bb" || pentuB === "bb1") ? { h: 280, s: 12, l: 50 } : { h: 30, s: 25, l: 65 })
-                : (pentuB.includes("B") ? { h: 30, s: 5, l: 18 } : (pentuB === "bb" || pentuB === "bb1") ? { h: 25, s: 40, l: 25 } : { h: 20, s: 50, l: 40 });
+                let tummaHSL = onkoDiluutio 
+                    ? (pentuB.includes("B") ? { h: 210, s: 15, l: 45 } : (pentuB === "bb" || pentuB === "bb1") ? { h: 280, s: 12, l: 50 } : { h: 30, s: 25, l: 65 })
+                    : (pentuB.includes("B") ? { h: 30, s: 5, l: 18 } : (pentuB === "bb" || pentuB === "bb1") ? { h: 25, s: 40, l: 25 } : { h: 20, s: 50, l: 40 });
 
-            let harjaBaseHSL;
-            let onkoPunainenNakyy = (pentuO === "oo" || pentuO === "Oo");
+                let harjaBaseHSL;
+                let onkoPunainenNakyy = (pentuO === "oo" || pentuO === "Oo");
 
-            if (onkoPunainenNakyy && Math.random() < 0.5) {
-                if (pentuH === "HH") {
-                    harjaBaseHSL = onkoDiluutio ? { h: 25, s: 30, l: 30 } : { h: 15, s: 60, l: 20 };
-                } else if (pentuH.includes("H") && pentuH.includes("h")) {
-                    harjaBaseHSL = onkoDiluutio ? { h: 35, s: 45, l: 60 } : { h: 25, s: 70, l: 35 };
+                if (onkoPunainenNakyy && Math.random() < 0.5) {
+                    if (pentuH === "HH") {
+                        harjaBaseHSL = onkoDiluutio ? { h: 25, s: 30, l: 30 } : { h: 15, s: 60, l: 20 };
+                    } else if (pentuH.includes("H") && pentuH.includes("h")) {
+                        harjaBaseHSL = onkoDiluutio ? { h: 35, s: 45, l: 60 } : { h: 25, s: 70, l: 35 };
+                    } else {
+                        harjaBaseHSL = onkoDiluutio ? { h: 45, s: 50, l: 85 } : { h: 35, s: 85, l: 60 };
+                    }
                 } else {
-                    harjaBaseHSL = onkoDiluutio ? { h: 45, s: 50, l: 85 } : { h: 35, s: 85, l: 60 };
+                    harjaBaseHSL = (pentuH === "HH") ? { h: 30, s: 10, l: 15 } :
+                                   (pentuH.includes("H") && pentuH.includes("h")) ? { h: 25, s: 35, l: 28 } :
+                                   { h: 35, s: 65, l: 75 };
                 }
-            } else {
-                harjaBaseHSL = (pentuH === "HH") ? { h: 30, s: 10, l: 15 } :
-                               (pentuH.includes("H") && pentuH.includes("h")) ? { h: 25, s: 35, l: 28 } :
-                               { h: 35, s: 65, l: 75 };
-            }
-            
-            let punainenHSL = pentuO === "oo" 
-                ? (onkoDiluutio ? { h: 42, s: 45, l: 85 } : { h: 38, s: 55, l: 78 })
-                : (onkoDiluutio ? { h: 30, s: 60, l: 70 } : { h: 20, s: 80, l: 50 });
+                
+                let punainenHSL = pentuO === "oo" 
+                    ? (onkoDiluutio ? { h: 42, s: 45, l: 85 } : { h: 38, s: 55, l: 78 })
+                    : (onkoDiluutio ? { h: 30, s: 60, l: 70 } : { h: 20, s: 80, l: 50 });
 
-            let variTumma = varioiHSL(tummaHSL.h, tummaHSL.s, tummaHSL.l);
-            let variPunainen = varioiHSL(punainenHSL.h, punainenHSL.s, punainenHSL.l);
-            let variHarja = varioiHSL(harjaBaseHSL.h, harjaBaseHSL.s, harjaBaseHSL.l);
+                let variTumma = varioiHSL(tummaHSL.h, tummaHSL.s, tummaHSL.l);
+                let variPunainen = varioiHSL(punainenHSL.h, punainenHSL.s, punainenHSL.l);
+                let variHarja = varioiHSL(harjaBaseHSL.h, harjaBaseHSL.s, harjaBaseHSL.l);
 
-            let paavari = "", laikkavari = null;
+                let paavari = "", laikkavari = null;
 
-            if (pentuN === "NN") {
-                paavari = variTumma;
-            } else if (pentuN === "nn") {
-                paavari = variPunainen;
-            } else {
-                if (Math.random() < 0.5) {
-                    paavari = variPunainen; laikkavari = variTumma;
+                if (pentuN === "NN") {
+                    paavari = variTumma;
+                } else if (pentuN === "nn") {
+                    paavari = variPunainen;
                 } else {
-                    paavari = variTumma; laikkavari = variPunainen;
+                    if (Math.random() < 0.5) {
+                        paavari = variPunainen; laikkavari = variTumma;
+                    } else {
+                        paavari = variTumma; laikkavari = variPunainen;
+                    }
                 }
-            }
 
-            if (pentuS === "SS" && Math.random() < 0.5) {
-                variHarja = "#ffffff";
-            } else if (pentuS === "Ss" && Math.random() < 0.2) {
-                variHarja = "#ffffff";
-            }
-
-            let onkoRaitaGeeni = pentuR.includes("R");
-            let onkoTaplaGeeni = (pentuP === "pp");
-
-            let kuviotyyppi = "eikuviota";
-            if (onkoRaitaGeeni && onkoTaplaGeeni) {
-                kuviotyyppi = "ocelot";
-            } else if (onkoRaitaGeeni) {
-                kuviotyyppi = "raita";
-            } else if (onkoTaplaGeeni) {
-                kuviotyyppi = "täplä";
-            }
-
-            let kuvioLimbs = false, kuvioBody = false, kuvioFace = false;
-            if (kuviotyyppi !== "eikuviota") {
-                if (pentuA.includes("A")) {
-                    kuvioLimbs = true; kuvioBody = true; kuvioFace = true;
-                } else if (pentuA === "aa" || pentuA === "aa1") {
-                    kuvioLimbs = true; kuvioFace = true;
-                } else if (pentuA === "a1a1") {
-                    kuvioBody = true;
+                if (pentuS === "SS" && Math.random() < 0.5) {
+                    variHarja = "#ffffff";
+                } else if (pentuS === "Ss" && Math.random() < 0.2) {
+                    variHarja = "#ffffff";
                 }
+
+                let onkoRaitaGeeni = pentuR.includes("R");
+                let onkoTaplaGeeni = (pentuP === "pp");
+
+                let kuviotyyppi = "eikuviota";
+                if (onkoRaitaGeeni && onkoTaplaGeeni) {
+                    kuviotyyppi = "ocelot";
+                } else if (onkoRaitaGeeni) {
+                    kuviotyyppi = "raita";
+                } else if (onkoTaplaGeeni) {
+                    kuviotyyppi = "täplä";
+                }
+
+                let kuvioLimbs = false, kuvioBody = false, kuvioFace = false;
+                if (kuviotyyppi !== "eikuviota") {
+                    if (pentuA.includes("A")) {
+                        kuvioLimbs = true; kuvioBody = true; kuvioFace = true;
+                    } else if (pentuA === "aa" || pentuA === "aa1") {
+                        kuvioLimbs = true; kuvioFace = true;
+                    } else if (pentuA === "a1a1") {
+                        kuvioBody = true;
+                    }
+                }
+
+                let onkoExtraKorvat = kuvioFace && (Math.random() < 0.5);
+                let onkoExtraKuono  = kuvioFace && (Math.random() < 0.5);
+                let onkoVaaleaKeskus = (pentuV === "vv");
+
+                document.getElementById("tulos").innerText = 
+                    `Genotyyppi: ${currentGenotype}\n` +
+                    `Silmät: ${pentuEyeColor} | Nahka: ${pentuSkinColor} | Nenä: ${pentuNose}\n` +
+                    `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} ${onkoVaaleaKeskus ? "(vv vaalea keskus)" : "(V_ tasavärinen)"}`;
+
+                let karvanPohja = onkoKihara ? "Untitled309_20261008214953.png" : "Untitled309_20261008214944.png";
+                let ihoTiedosto = onkoKihara ? "Untitled309_20261009185045.png" : earsAndPawsSkinFile;
+
+                piirraErillinenHarjaPentu({
+                    pohja: karvanPohja,
+                    pohjaHarja: onkoHarja ? (onkoKihara ? "Untitled309_20261008151613.png" : "Untitled309_20261008151605.png") : null,
+                    viiva: onkoKihara ? "Untitled309_20261008153435.png" : "Untitled309_20261008153442.png",
+                    viivaHarja: onkoHarja ? (onkoKihara ? "Untitled309_20261008153420.png" : "Untitled309_20261008153429.png") : null,
+                    kehoVari: paavari,
+                    laikkavari: laikkavari,
+                    harjaVari: variHarja,
+                    pentuS: pentuS,
+                    onkoGradient: onkoGradient,
+                    onkoVaaleaKeskus: onkoVaaleaKeskus,
+                    eyeColor: pentuEyeColor,
+                    eyeLineart: eyeLinearts[Math.floor(Math.random() * eyeLinearts.length)],
+                    skinColor: pentuSkinColor,
+                    noseSkin: noseData[pentuNose].skin,
+                    noseViiva: noseData[pentuNose].lineart,
+                    mouthLineart: mouthLinearts[Math.floor(Math.random() * mouthLinearts.length)],
+                    earsAndPawsSkin: ihoTiedosto,
+                    kuviotyyppi: kuviotyyppi,
+                    kuvioLimbs: kuvioLimbs,
+                    kuvioBody: kuvioBody,
+                    kuvioFace: kuvioFace,
+                    extraKorvat: onkoExtraKorvat ? faceExtraKorvat : null,
+                    extraKuono: onkoExtraKuono ? faceExtraKuono : null
+                });
+            } catch (err) {
+                document.getElementById("tulos").innerText = "Virhe generoinnissa: " + err.message;
+                console.error(err);
             }
-
-            let onkoExtraKorvat = kuvioFace && (Math.random() < 0.5);
-            let onkoExtraKuono  = kuvioFace && (Math.random() < 0.5);
-
-            let onkoVaaleaKeskus = (pentuV === "vv");
-
-            document.getElementById("tulos").innerText = 
-                `Genotyyppi: ${currentGenotype}\n` +
-                `Silmät: ${pentuEyeColor} | Nahka: ${pentuSkinColor} | Nenä: ${pentuNose}\n` +
-                `Kuvio: ${kuviotyyppi.toUpperCase()} ${onkoDiluutio ? "(dd Diluutio)" : ""} ${onkoVaaleaKeskus ? "(vv vaalea keskus)" : "(V_ tasavärinen)"}`;
-
-            let karvanPohja = onkoKihara ? "Untitled309_20261008214953.png" : "Untitled309_20261008214944.png";
-            let ihoTiedosto = onkoKihara ? "Untitled309_20261009185045.png" : earsAndPawsSkinFile;
-
-            piirraErillinenHarjaPentu({
-                pohja: karvanPohja,
-                pohjaHarja: onkoHarja ? (onkoKihara ? "Untitled309_20261008151613.png" : "Untitled309_20261008151605.png") : null,
-                viiva: onkoKihara ? "Untitled309_20261008153435.png" : "Untitled309_20261008153442.png",
-                viivaHarja: onkoHarja ? (onkoKihara ? "Untitled309_20261008153420.png" : "Untitled309_20261008153429.png") : null,
-                kehoVari: paavari,
-                laikkavari: laikkavari,
-                harjaVari: variHarja,
-                pentuS: pentuS,
-                onkoGradient: onkoGradient,
-                onkoVaaleaKeskus: onkoVaaleaKeskus,
-                eyeColor: pentuEyeColor,
-                eyeLineart: eyeLinearts[Math.floor(Math.random() * eyeLinearts.length)],
-                skinColor: pentuSkinColor,
-                noseSkin: noseData[pentuNose].skin,
-                noseViiva: noseData[pentuNose].lineart,
-                mouthLineart: mouthLinearts[Math.floor(Math.random() * mouthLinearts.length)],
-                earsAndPawsSkin: ihoTiedosto,
-                kuviotyyppi: kuviotyyppi,
-                kuvioLimbs: kuvioLimbs,
-                kuvioBody: kuvioBody,
-                kuvioFace: kuvioFace,
-                extraKorvat: onkoExtraKorvat ? faceExtraKorvat : null,
-                extraKuono: onkoExtraKuono ? faceExtraKuono : null
-            });
         }
 
         function lataaKuva(url) {
@@ -812,7 +815,7 @@
                     bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
 
                     bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.kehoVari, 7);
+                    piirraIsotValkoisetAlueet(bodyCtx, canvas.width, canvas.height, opts.kehoVari, 5);
                     if (opts.laikkavari) {
                         piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.laikkavari, 5);
                     }
@@ -912,11 +915,8 @@
                     }
                 }
 
-                // VALKOISET LAIKUT (SS / Ss) - Asetettu AINA muiden kuvioiden ja gradienttien PÄÄLLE
-                if (opts.pentuS === "SS") {
-                    bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraIsotValkoisetAlueet(bodyCtx, canvas.width, canvas.height, "#ffffff", 5);
-                } else if (opts.pentuS === "Ss") {
+                // VALKOISET LAIKUT (Ss) - Asetettu AINA muiden kuvioiden ja gradienttien PÄÄLLE
+                if (opts.pentuS === "Ss") {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 3);
                 }
