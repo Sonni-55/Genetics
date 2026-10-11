@@ -815,16 +815,26 @@
                 let selectedNImagePaths = [];
                 let selectedN1ImagePaths = [];
 
-                // N: Kuvia voi tulla 0:sta kaikkiin asti
+                // N: Painotettu määrä niin, että 0-2 kuvaa on yleistä, yli 3 harvinaisempaa
                 if (pentuN === "Nn") {
                     let allN = [...nAssets];
-                    if (Math.random() < 0.15) allN.push(nRareAsset);
-                    selectedNImagePaths = getRandomSubarray(allN, 0, allN.length);
+                    if (Math.random() < 0.1) allN.push(nRareAsset);
+                    
+                    // Valitaan määrä painotetusti: 0, 1 tai 2 on todennäköisintä
+                    let nMaaraArpa = Math.random();
+                    let kuvaMaara = 0;
+                    if (nMaaraArpa < 0.50) kuvaMaara = 0;
+                    else if (nMaaraArpa < 0.70) kuvaMaara = 1;
+                    else if (nMaaraArpa < 0.90) kuvaMaara = 2;
+                    else kuvaMaara = Math.min(allN.length, Math.floor(Math.random() * 3) + 3); // 3 tai enemmän on harvinaista
+
+                    selectedNImagePaths = getRandomSubarray(allN, kuvaMaara, kuvaMaara);
                 } 
-                // N1: Aina vähintään 1 ja enintään 2 kuvaa (ei randomisoituja täpliä)
+                // N1: Käyttää AINA vain 1-2 kuvaa (ei lainkaan calico-laikkoja taustalle)
                 else if (pentuN === "N1n") {
                     selectedN1ImagePaths = getRandomSubarray(n1Assets, 1, 2);
                 }
+
 
                 let valkoisetKuvatListat = { frontPaws: [], backPaws: [], belly: [], neck: [], tail: [], face: [] };
                 if (pentuS === "Ss" || pentuS === "SS") {
@@ -1077,9 +1087,29 @@
                     piirraGradient(bodyCtx, 2163, 1361);
                 }
 
-                // 1. N JA N1 KUVIOT (piirretään ennen raitoja/täpliä)
+                                // 1. N JA N1 KUVIOT (piirretään ennen raitoja/täpliä)
                 if (opts.pentuN === "Nn" && opts.laikkavari) {
-                    piirraCalicoLaikut(bodyCtx, 2163, 1361, opts.laikkavari, 6);
+                    piirraCalicoLaikut(bodyCtx, 2163, 1361, opts.laikkavari, 4); // Vähemmän satunnaisia taustatäpliä Nn:lle
+                    nImgs.forEach(img => {
+                        if (img) {
+                            const nTempCanvas = document.createElement("canvas");
+                            nTempCanvas.width = 2163; nTempCanvas.height = 1361;
+                            const nCtx = nTempCanvas.getContext("2d");
+
+                            nCtx.drawImage(img, 0, 0, 2163, 1361);
+                            nCtx.globalCompositeOperation = "source-in";
+                            nCtx.fillStyle = opts.laikkavari;
+                            nCtx.fillRect(0, 0, 2163, 1361);
+
+                            bodyCtx.globalCompositeOperation = "source-atop";
+                            bodyCtx.drawImage(nTempCanvas, 0, 0);
+                        }
+                    });
+                }
+
+                                // 1. N JA N1 KUVIOT (piirretään ennen raitoja/täpliä)
+                if (opts.pentuN === "Nn" && opts.laikkavari) {
+                    piirraCalicoLaikut(bodyCtx, 2163, 1361, opts.laikkavari, 8); // Vähemmän satunnaisia taustatäpliä Nn:lle
                     nImgs.forEach(img => {
                         if (img) {
                             const nTempCanvas = document.createElement("canvas");
@@ -1098,6 +1128,7 @@
                 }
 
                 if (opts.pentuN === "N1n" && opts.laikkavari) {
+                    // N1 ei käytä lainkaan taustalaikkoja, vain pelkät valitut 1-2 kuvaa!
                     n1Imgs.forEach(img => {
                         if (img) {
                             const n1TempCanvas = document.createElement("canvas");
@@ -1114,6 +1145,7 @@
                         }
                     });
                 }
+
 
                 // 2. VARSINAISET KUVIOT (raidat, täplät, ocelot) TULEVAT NÄIDEN PÄÄLLE
                 if (opts.kuviotyyppi !== "eikuviota") {
