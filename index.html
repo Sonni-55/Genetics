@@ -765,17 +765,13 @@
                 let paavari = "", laikkavari = null;
 
                 if (pentuN === "Nn" || pentuN === "N1n") {
-                    if (Math.random() < 0.5) {
-                        paavari = variPunainen; laikkavari = variTumma;
-                    } else {
-                        paavari = variTumma; laikkavari = variPunainen;
-                    }
-                } else if (pentuN === "nn") {
-                    paavari = variPunainen;
-                } else {
-                    paavari = variTumma;
-                }
-
+    if (Math.random() < 0.5) {
+        paavari = variPunainen; laikkavari = variTumma;
+    } else {
+        paavari = variTumma; laikkavari = variPunainen;
+    }
+}
+     
                 if (pentuS === "SS" && Math.random() < 0.5) {
                     variHarja = "#ffffff";
                 } else if (pentuS === "Ss" && Math.random() < 0.2) {
@@ -1067,6 +1063,7 @@
             ]);
 
             if (imgPohja) {
+                        if (imgPohja) {
                 const bodyCanvas = document.createElement("canvas");
                 bodyCanvas.width = 2163; bodyCanvas.height = 1361;
                 const bodyCtx = bodyCanvas.getContext("2d");
@@ -1077,7 +1074,8 @@
                 bodyCtx.fillStyle = opts.kehoVari;
                 bodyCtx.fillRect(0, 0, 2163, 1361);
 
-                if (opts.laikkavari) {
+                // Piirretään yleiset taustalaikut VAIN jos kyseessä ei ole N1n
+                if (opts.laikkavari && opts.pentuN !== "N1n") {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraCalicoLaikut(bodyCtx, 2163, 1361, opts.laikkavari, 8);
                 }
@@ -1087,9 +1085,9 @@
                     piirraGradient(bodyCtx, 2163, 1361);
                 }
 
-                                // 1. N JA N1 KUVIOT (piirretään ennen raitoja/täpliä)
+                // 1. Nn piirtää lisää satunnaisia laikkuja + omat kuvansa
                 if (opts.pentuN === "Nn" && opts.laikkavari) {
-                    piirraCalicoLaikut(bodyCtx, 2163, 1361, opts.laikkavari, 4); // Vähemmän satunnaisia taustatäpliä Nn:lle
+                    piirraCalicoLaikut(bodyCtx, 2163, 1361, opts.laikkavari, 8);
                     nImgs.forEach(img => {
                         if (img) {
                             const nTempCanvas = document.createElement("canvas");
@@ -1107,28 +1105,8 @@
                     });
                 }
 
-                                // 1. N JA N1 KUVIOT (piirretään ennen raitoja/täpliä)
-                if (opts.pentuN === "Nn" && opts.laikkavari) {
-                    piirraCalicoLaikut(bodyCtx, 2163, 1361, opts.laikkavari, 8); // Vähemmän satunnaisia taustatäpliä Nn:lle
-                    nImgs.forEach(img => {
-                        if (img) {
-                            const nTempCanvas = document.createElement("canvas");
-                            nTempCanvas.width = 2163; nTempCanvas.height = 1361;
-                            const nCtx = nTempCanvas.getContext("2d");
-
-                            nCtx.drawImage(img, 0, 0, 2163, 1361);
-                            nCtx.globalCompositeOperation = "source-in";
-                            nCtx.fillStyle = opts.laikkavari;
-                            nCtx.fillRect(0, 0, 2163, 1361);
-
-                            bodyCtx.globalCompositeOperation = "source-atop";
-                            bodyCtx.drawImage(nTempCanvas, 0, 0);
-                        }
-                    });
-                }
-
+                // N1n piirtää PELKÄSTÄÄN omat arvotut kuvansa laikkavärillä!
                 if (opts.pentuN === "N1n" && opts.laikkavari) {
-                    // N1 ei käytä lainkaan taustalaikkoja, vain pelkät valitut 1-2 kuvaa!
                     n1Imgs.forEach(img => {
                         if (img) {
                             const n1TempCanvas = document.createElement("canvas");
@@ -1144,8 +1122,7 @@
                             bodyCtx.drawImage(n1TempCanvas, 0, 0);
                         }
                     });
-                }
-
+                }           
 
                 // 2. VARSINAISET KUVIOT (raidat, täplät, ocelot) TULEVAT NÄIDEN PÄÄLLE
                 if (opts.kuviotyyppi !== "eikuviota") {
