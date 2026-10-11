@@ -763,7 +763,7 @@
 
                 let paavari = "", laikkavari = null;
 
-                if (opts.pentuN === "NN" || opts.pentuN === "N1N" || pentuN === "N1N1") {
+                if (pentuN === "NN" || pentuN === "N1N" || pentuN === "N1N1") {
                     paavari = variTumma;
                 } else if (pentuN === "nn") {
                     paavari = variPunainen;
@@ -1115,7 +1115,7 @@
                     }
                 }
 
-                if (pentuN === "Nn") {
+                if (opts.pentuN === "Nn") {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraCalicoLaikut(bodyCtx, 2163, 1361, opts.laikkavari || opts.kehoVari, 3);
                     
@@ -1127,7 +1127,7 @@
                     });
                 }
 
-                if (pentuN === "N1n") {
+                if (opts.pentuN === "N1n") {
                     n1Imgs.forEach(img => {
                         if (img) {
                             const n1TempCanvas = document.createElement("canvas");
