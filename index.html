@@ -402,7 +402,9 @@
             "Untitled313_20261011130759.png",
             "Untitled313_20261011130807.png",
             "Untitled313_20261011132041.png",
-            "Untitled313_20261011132102.png"
+            "Untitled313_20261011132102.png",
+            "Untitled313_20261011164350.png",
+            "Untitled313_20261011164432.png"
         ];
 
         const whiteMarkingAssets = {
@@ -762,7 +764,6 @@
 
                 let paavari = "", laikkavari = null;
 
-                // Nn ja N1n ovat AINA kilpikonnakuvioisia (saavat molemmat värit)
                 if (pentuN === "Nn" || pentuN === "N1n") {
                     if (Math.random() < 0.5) {
                         paavari = variPunainen; laikkavari = variTumma;
@@ -814,13 +815,15 @@
                 let selectedNImagePaths = [];
                 let selectedN1ImagePaths = [];
 
-                // Pienennetään kuvatäplien esiintymismäärää ja todennäköisyyttä
-                if (pentuN === "Nn" && Math.random() < 0.6) {
+                // N: Kuvia voi tulla 0:sta kaikkiin asti
+                if (pentuN === "Nn") {
                     let allN = [...nAssets];
-                    if (Math.random() < 0.05) allN.push(nRareAsset);
-                    selectedNImagePaths = getRandomSubarray(allN, 0, 1); // Max 1 kuvatäplä kerrallaan
-                } else if (pentuN === "N1n" && Math.random() < 0.6) {
-                    selectedN1ImagePaths = getRandomSubarray(n1Assets, 0, 1); // Max 1 kuvatäplä kerrallaan
+                    if (Math.random() < 0.15) allN.push(nRareAsset);
+                    selectedNImagePaths = getRandomSubarray(allN, 0, allN.length);
+                } 
+                // N1: Aina vähintään 1 ja enintään 2 kuvaa (ei randomisoituja täpliä)
+                else if (pentuN === "N1n") {
+                    selectedN1ImagePaths = getRandomSubarray(n1Assets, 1, 2);
                 }
 
                 let valkoisetKuvatListat = { frontPaws: [], backPaws: [], belly: [], neck: [], tail: [], face: [] };
@@ -1074,11 +1077,9 @@
                     piirraGradient(bodyCtx, 2163, 1361);
                 }
 
-                // 1. N- JA N1-KUVIOT (Aina laikkavärillä, piirretään ennen raitoja/täpliä)
+                // 1. N JA N1 KUVIOT (piirretään ennen raitoja/täpliä)
                 if (opts.pentuN === "Nn" && opts.laikkavari) {
-                    bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, 2163, 1361, opts.laikkavari, 10); // Enemmän satunnaisia täpliä Nn:lle
-                    
+                    piirraCalicoLaikut(bodyCtx, 2163, 1361, opts.laikkavari, 6);
                     nImgs.forEach(img => {
                         if (img) {
                             const nTempCanvas = document.createElement("canvas");
