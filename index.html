@@ -765,12 +765,16 @@
                 let paavari = "", laikkavari = null;
 
                 if (pentuN === "Nn" || pentuN === "N1n") {
-    if (Math.random() < 0.5) {
-        paavari = variPunainen; laikkavari = variTumma;
-    } else {
-        paavari = variTumma; laikkavari = variPunainen;
-    }
-}
+                    if (Math.random() < 0.5) {
+                        paavari = variPunainen; laikkavari = variTumma;
+                    } else {
+                        paavari = variTumma; laikkavari = variPunainen;
+                    }
+                } else if (pentuN === "nn") {
+                    paavari = variPunainen;
+                } else {
+                    paavari = variTumma;
+                }
      
                 if (pentuS === "SS" && Math.random() < 0.5) {
                     variHarja = "#ffffff";
@@ -811,26 +815,22 @@
                 let selectedNImagePaths = [];
                 let selectedN1ImagePaths = [];
 
-                // N: Painotettu määrä niin, että 0-2 kuvaa on yleistä, yli 3 harvinaisempaa
                 if (pentuN === "Nn") {
                     let allN = [...nAssets];
                     if (Math.random() < 0.1) allN.push(nRareAsset);
                     
-                    // Valitaan määrä painotetusti: 0, 1 tai 2 on todennäköisintä
                     let nMaaraArpa = Math.random();
                     let kuvaMaara = 0;
                     if (nMaaraArpa < 0.50) kuvaMaara = 0;
                     else if (nMaaraArpa < 0.70) kuvaMaara = 1;
                     else if (nMaaraArpa < 0.90) kuvaMaara = 2;
-                    else kuvaMaara = Math.min(allN.length, Math.floor(Math.random() * 3) + 3); // 3 tai enemmän on harvinaista
+                    else kuvaMaara = Math.min(allN.length, Math.floor(Math.random() * 3) + 3);
 
                     selectedNImagePaths = getRandomSubarray(allN, kuvaMaara, kuvaMaara);
                 } 
-                // N1: Käyttää AINA vain 1-2 kuvaa (ei lainkaan calico-laikkoja taustalle)
                 else if (pentuN === "N1n") {
                     selectedN1ImagePaths = getRandomSubarray(n1Assets, 1, 2);
                 }
-
 
                 let valkoisetKuvatListat = { frontPaws: [], backPaws: [], belly: [], neck: [], tail: [], face: [] };
                 if (pentuS === "Ss" || pentuS === "SS") {
@@ -1063,7 +1063,6 @@
             ]);
 
             if (imgPohja) {
-                        if (imgPohja) {
                 const bodyCanvas = document.createElement("canvas");
                 bodyCanvas.width = 2163; bodyCanvas.height = 1361;
                 const bodyCtx = bodyCanvas.getContext("2d");
@@ -1074,15 +1073,9 @@
                 bodyCtx.fillStyle = opts.kehoVari;
                 bodyCtx.fillRect(0, 0, 2163, 1361);
 
-                // Piirretään yleiset taustalaikut VAIN jos kyseessä ei ole N1n
                 if (opts.laikkavari && opts.pentuN !== "N1n") {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraCalicoLaikut(bodyCtx, 2163, 1361, opts.laikkavari, 8);
-                }
-
-                if (opts.onkoGradient) {
-                    bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraGradient(bodyCtx, 2163, 1361);
                 }
 
                 // 1. Nn piirtää lisää satunnaisia laikkuja + omat kuvansa
@@ -1122,9 +1115,15 @@
                             bodyCtx.drawImage(n1TempCanvas, 0, 0);
                         }
                     });
-                }           
+                }
 
-                // 2. VARSINAISET KUVIOT (raidat, täplät, ocelot) TULEVAT NÄIDEN PÄÄLLE
+                // 2. GRADIENTTI (siirretty N-geenien ja N1-geenien päälle, mutta R-, P- ja S-geenien alle)
+                if (opts.onkoGradient) {
+                    bodyCtx.globalCompositeOperation = "source-atop";
+                    piirraGradient(bodyCtx, 2163, 1361);
+                }
+
+                // 3. VARSINAISET KUVIOT (raidat, täplät, ocelot) TULEVAT NÄIDEN PÄÄLLE
                 if (opts.kuviotyyppi !== "eikuviota") {
                     let outlineTummennus = 50;
                     let outlineOnkoVaaleampi = false;
@@ -1166,7 +1165,7 @@
                     }
                 }
 
-                // 3. VALKOISET MERKINNÄT (S-geeni)
+                // 4. VALKOISET MERKINNÄT (S-geeni)
                 if (opts.pentuS === "SS") {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraIsotValkoisetAlueet(bodyCtx, 2163, 1361, "#ffffff", 5);
