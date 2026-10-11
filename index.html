@@ -571,7 +571,7 @@
             else if (genotyyppi === "Bb") alleelit = ["B", "b"];
             else if (genotyyppi === "Bb1") alleelit = ["B", "b1"];
             else if (genotyyppi === "bb") alleelit = ["b", "b"];
-            else if (genotyyppi === "bb1") alleelit = ["b", "bb1".includes("b1") ? "b1" : "b"];
+            else if (genotyyppi === "bb1") alleelit = ["b", "b1"];
             else if (genotyyppi === "b1b1") alleelit = ["b1", "b1"];
             else if (genotyyppi === "AA") alleelit = ["A", "A"];
             else if (genotyyppi === "Aa") alleelit = ["A", "a"];
@@ -699,7 +699,6 @@
         }
 
         async function arvoPentu() {
-            // Näytetään latausteksti heti kun arvonta alkaa
             document.getElementById("tulos").innerText = "Luodaan kuvaa...";
 
             try {
@@ -763,16 +762,17 @@
 
                 let paavari = "", laikkavari = null;
 
-                if (pentuN === "NN" || pentuN === "N1N" || pentuN === "N1N1") {
-                    paavari = variTumma;
-                } else if (pentuN === "nn") {
-                    paavari = variPunainen;
-                } else { 
+                // Nn ja N1n ovat AINA kilpikonnakuvioisia (saavat molemmat värit)
+                if (pentuN === "Nn" || pentuN === "N1n") {
                     if (Math.random() < 0.5) {
                         paavari = variPunainen; laikkavari = variTumma;
                     } else {
                         paavari = variTumma; laikkavari = variPunainen;
                     }
+                } else if (pentuN === "nn") {
+                    paavari = variPunainen;
+                } else {
+                    paavari = variTumma;
                 }
 
                 if (pentuS === "SS" && Math.random() < 0.5) {
@@ -814,12 +814,13 @@
                 let selectedNImagePaths = [];
                 let selectedN1ImagePaths = [];
 
-                if (pentuN === "Nn") {
+                // Pienennetään kuvatäplien esiintymismäärää ja todennäköisyyttä
+                if (pentuN === "Nn" && Math.random() < 0.6) {
                     let allN = [...nAssets];
-                    if (Math.random() < 0.1) allN.push(nRareAsset);
-                    selectedNImagePaths = getRandomSubarray(allN, 0, allN.length);
-                } else if (pentuN === "N1n") {
-                    selectedN1ImagePaths = getRandomSubarray(n1Assets, 1, 2);
+                    if (Math.random() < 0.05) allN.push(nRareAsset);
+                    selectedNImagePaths = getRandomSubarray(allN, 0, 1); // Max 1 kuvatäplä kerrallaan
+                } else if (pentuN === "N1n" && Math.random() < 0.6) {
+                    selectedN1ImagePaths = getRandomSubarray(n1Assets, 0, 1); // Max 1 kuvatäplä kerrallaan
                 }
 
                 let valkoisetKuvatListat = { frontPaws: [], backPaws: [], belly: [], neck: [], tail: [], face: [] };
@@ -891,7 +892,6 @@
                     extraKuono: onkoExtraKuono ? faceExtraKuono : null
                 });
 
-                // Päivitetään lopulliset tekstit, kun kuva on valmis
                 document.getElementById("tulos").innerText = 
                     `Genotyyppi: ${currentGenotype}\n` +
                     `Silmät: ${pentuEyeColor} | Nahka: ${pentuSkinColor} | Nenä: ${pentuNose}\n` +
@@ -1073,7 +1073,30 @@
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraGradient(bodyCtx, 2163, 1361);
                 }
-                if (opts.pentuN === "N1n") {
+
+                // 1. N- JA N1-KUVIOT (Aina laikkavärillä, piirretään ennen raitoja/täpliä)
+                if (opts.pentuN === "Nn" && opts.laikkavari) {
+                    bodyCtx.globalCompositeOperation = "source-atop";
+                    piirraCalicoLaikut(bodyCtx, 2163, 1361, opts.laikkavari, 10); // Enemmän satunnaisia täpliä Nn:lle
+                    
+                    nImgs.forEach(img => {
+                        if (img) {
+                            const nTempCanvas = document.createElement("canvas");
+                            nTempCanvas.width = 2163; nTempCanvas.height = 1361;
+                            const nCtx = nTempCanvas.getContext("2d");
+
+                            nCtx.drawImage(img, 0, 0, 2163, 1361);
+                            nCtx.globalCompositeOperation = "source-in";
+                            nCtx.fillStyle = opts.laikkavari;
+                            nCtx.fillRect(0, 0, 2163, 1361);
+
+                            bodyCtx.globalCompositeOperation = "source-atop";
+                            bodyCtx.drawImage(nTempCanvas, 0, 0);
+                        }
+                    });
+                }
+
+                if (opts.pentuN === "N1n" && opts.laikkavari) {
                     n1Imgs.forEach(img => {
                         if (img) {
                             const n1TempCanvas = document.createElement("canvas");
@@ -1082,19 +1105,16 @@
 
                             n1Ctx.drawImage(img, 0, 0, 2163, 1361);
                             n1Ctx.globalCompositeOperation = "source-in";
-                            n1Ctx.fillStyle = opts.kehoVari;
+                            n1Ctx.fillStyle = opts.laikkavari;
                             n1Ctx.fillRect(0, 0, 2163, 1361);
-
-                            if (opts.laikkavari) {
-                                n1Ctx.globalCompositeOperation = "source-atop";
-                                piirraCalicoLaikut(n1Ctx, 2163, 1361, opts.laikkavari, 6);
-                            }
 
                             bodyCtx.globalCompositeOperation = "source-atop";
                             bodyCtx.drawImage(n1TempCanvas, 0, 0);
                         }
                     });
                 }
+
+                // 2. VARSINAISET KUVIOT (raidat, täplät, ocelot) TULEVAT NÄIDEN PÄÄLLE
                 if (opts.kuviotyyppi !== "eikuviota") {
                     let outlineTummennus = 50;
                     let outlineOnkoVaaleampi = false;
@@ -1136,18 +1156,7 @@
                     }
                 }
 
-                if (opts.pentuN === "Nn") {
-                    bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, 2163, 1361, opts.laikkavari || opts.kehoVari, 3);
-                    
-                    nImgs.forEach(img => {
-                        if (img) {
-                            bodyCtx.fillStyle = opts.laikkavari || opts.kehoVari;
-                            bodyCtx.drawImage(img, 0, 0, 2163, 1361);
-                        }
-                    });
-                }
-
+                // 3. VALKOISET MERKINNÄT (S-geeni)
                 if (opts.pentuS === "SS") {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraIsotValkoisetAlueet(bodyCtx, 2163, 1361, "#ffffff", 5);
