@@ -384,9 +384,27 @@
         const faceExtraKorvat = "Untitled311_20261009195258.png";
         const faceExtraKuono  = "Untitled311_20261009195304.png";
 
-        const nAssets = [];
-        const n1Assets = [];
- 
+        const nAssets = [
+            "Untitled313_20261011130457.png",
+            "Untitled313_20261011130542.png",
+            "Untitled313_20261011130548.png",
+            "Untitled313_20261011130553.png",
+            "Untitled313_20261011130601.png",
+            "Untitled313_20261011130616.png",
+            "Untitled313_20261011130734.png",
+            "Untitled313_20261011130739.png"
+        ];
+        const nRareAsset = "Untitled313_20261011130622.png";
+
+        const n1Assets = [
+            "Untitled313_20261011130751.png",
+            "Untitled313_20261011130755.png",
+            "Untitled313_20261011130759.png",
+            "Untitled313_20261011130807.png",
+            "Untitled313_20261011132041.png",
+            "Untitled313_20261011132102.png"
+        ];
+
         const whiteMarkingAssets = {
             frontPaws: [
                 "Untitled312_20261011112937.png",
@@ -553,7 +571,7 @@
             else if (genotyyppi === "Bb") alleelit = ["B", "b"];
             else if (genotyyppi === "Bb1") alleelit = ["B", "b1"];
             else if (genotyyppi === "bb") alleelit = ["b", "b"];
-            else if (genotyyppi === "bb1") alleelit = ["b", "b1"];
+            else if (genotyyppi === "bb1") alleelit = ["b", "bb1".includes("b1") ? "b1" : "b"];
             else if (genotyyppi === "b1b1") alleelit = ["b1", "b1"];
             else if (genotyyppi === "AA") alleelit = ["A", "A"];
             else if (genotyyppi === "Aa") alleelit = ["A", "a"];
@@ -567,8 +585,8 @@
             else if (genotyyppi === "NN") alleelit = ["N", "N"];
             else if (genotyyppi === "Nn") alleelit = ["N", "n"];
             else if (genotyyppi === "nn") alleelit = ["n", "n"];
-            else alleelit = [genotyyppi.substring(0, genotyyppi.length/2), genotyyppi.substring(genotyyppi.length/2)];
- 
+            else alleelit = [genotyyppi[0], genotyyppi[1]];
+
             return alleelit[Math.floor(Math.random() * 2)];
         }
 
@@ -680,7 +698,10 @@
             return shuffled.slice(0, count);
         }
 
-        function arvoPentu() {
+        async function arvoPentu() {
+            // Näytetään latausteksti heti kun arvonta alkaa
+            document.getElementById("tulos").innerText = "Luodaan kuvaa...";
+
             try {
                 let pentuM = luoGenotyyppi(document.getElementById("isa_m").value, document.getElementById("ema_m").value);
                 let pentuS = luoGenotyyppi(document.getElementById("isa_s").value, document.getElementById("ema_s").value);
@@ -833,20 +854,12 @@
                 }
                 if (kuviotyyppi !== "eikuviota") {
                     fenotyyppiKuvaus += `, kuvio (${kuviotSanaksi})`;
-                    let ääriviivaSävy = pentuK.includes("kk") ? "tummempi" : "tummempi";
-                    let keskustaSävy = pentuE.includes("ee") ? "tummempi" : "tummempi";
-                    fenotyyppiKuvaus += ` [ääriviivat: ${ääriviivaSävy}, keskusta: ${keskustaSävy}]`;
                 }
-
-                document.getElementById("tulos").innerText = 
-                    `Genotyyppi: ${currentGenotype}\n` +
-                    `Silmät: ${pentuEyeColor} | Nahka: ${pentuSkinColor} | Nenä: ${pentuNose}\n` +
-                    `Fenotyyppi: ${fenotyyppiKuvaus}`;
 
                 let karvanPohja = onkoKihara ? "Untitled312_20261011145432.png" : "Untitled309_20261008214944.png";
                 let ihoTiedosto = onkoKihara ? "Untitled309_20261009185045.png" : earsAndPawsSkinFile;
 
-                piirraErillinenHarjaPentu({
+                await piirraErillinenHarjaPentu({
                     pohja: karvanPohja,
                     pohjaHarja: onkoHarja ? (onkoKihara ? "Untitled309_20261008151613.png" : "Untitled309_20261008151605.png") : null,
                     viiva: onkoKihara ? "Untitled309_20261008153435.png" : "Untitled309_20261008153442.png",
@@ -877,6 +890,13 @@
                     extraKorvat: onkoExtraKorvat ? faceExtraKorvat : null,
                     extraKuono: onkoExtraKuono ? faceExtraKuono : null
                 });
+
+                // Päivitetään lopulliset tekstit, kun kuva on valmis
+                document.getElementById("tulos").innerText = 
+                    `Genotyyppi: ${currentGenotype}\n` +
+                    `Silmät: ${pentuEyeColor} | Nahka: ${pentuSkinColor} | Nenä: ${pentuNose}\n` +
+                    `Fenotyyppi: ${fenotyyppiKuvaus}`;
+
             } catch (err) {
                 document.getElementById("tulos").innerText = "Virhe generoinnissa: " + err.message;
                 console.error(err);
@@ -890,7 +910,7 @@
                 img.onload = () => resolve(img);
                 img.onerror = () => {
                     console.warn("Kuvan lataus epäonnistui: " + url);
-                    resolve(null); // Ohitetaan virhe, jotta ohjelma ei kaadu!
+                    resolve(null);
                 };
                 img.src = url;
             });
@@ -1217,7 +1237,6 @@
             if (imgNoseViiva) ctx.drawImage(imgNoseViiva, 0, 0, 2163, 1361);
             if (imgMouthLineart) ctx.drawImage(imgMouthLineart, 0, 0, 2163, 1361);
 
-            // Piirretään tekstit suoraan kuvan alapuolelle (valkoinen tausta alareunassa)
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 1361, 2163, 100);
             ctx.fillStyle = "#000000";
