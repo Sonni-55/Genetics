@@ -370,6 +370,54 @@
         const faceExtraKorvat = "Untitled311_20261009195258.png";
         const faceExtraKuono  = "Untitled311_20261009195304.png";
 
+        // Uudet S-geenin valkoisten kuvioiden tiedostot
+        const whiteMarkingAssets = {
+            frontPaws: [
+                "Untitled312_20261011112937.png",
+                "Untitled312_20261011112950.png",
+                "Untitled312_20261011112959.png"
+            ],
+            backPaws: [
+                "Untitled312_20261011112945.png",
+                "Untitled312_20261011112955.png",
+                "Untitled312_20261011113004.png"
+            ],
+            belly: [
+                "Untitled312_20261011113009.png",
+                "Untitled312_20261011113014.png"
+            ],
+            neck: {
+                curlyOnly: ["Untitled312_20261011113020.png"],
+                nonCurlyOnly: ["Untitled312_20261011113044.png"],
+                normal: [
+                    "Untitled312_20261011113048.png",
+                    "Untitled312_20261011113052.png"
+                ],
+                rare: [
+                    "Untitled312_20261011113057.png",
+                    "Untitled312_20261011113101.png"
+                ]
+            },
+            tail: [
+                "Untitled312_20261011113107.png",
+                "Untitled312_20261011113111.png",
+                "Untitled312_20261011113116.png",
+                "Untitled312_20261011113121.png"
+            ],
+            face: [
+                "Untitled312_20261011113126.png",
+                "Untitled312_20261011113130.png",
+                "Untitled312_20261011113135.png",
+                "Untitled312_20261011113140.png",
+                "Untitled312_20261011113145.png",
+                "Untitled312_20261011113149.png",
+                "Untitled312_20261011113154.png",
+                "Untitled312_20261011113159.png",
+                "Untitled312_20261011113203.png",
+                "Untitled312_20261011113209.png"
+            ]
+        };
+
         const stripeAssets = {
             limbs: [
                 { color: "Untitled311_20261009184723.png", outline: "Untitled311_20261009184731.png" },
@@ -436,7 +484,6 @@
                 });
             });
 
-            // Arvotaan myös satunnaiset värit silmille ja nahalle
             const satunnainenHex = () => "#" + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0').toUpperCase();
             
             if (!molemmat || Math.random() < 0.5) {
@@ -599,6 +646,12 @@
             ctx.restore();
         }
 
+        function getRandomSubarray(arr, minCount, maxCount) {
+            let count = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
+            let shuffled = [...arr].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
         function arvoPentu() {
             try {
                 let pentuM = luoGenotyyppi(document.getElementById("isa_m").value, document.getElementById("ema_m").value);
@@ -707,6 +760,28 @@
                 let onkoExtraKorvat = kuvioFace && (Math.random() < 0.5);
                 let onkoExtraKuono  = kuvioFace && (Math.random() < 0.5);
 
+                // S-geenin mukaiset valkoiset lisäkuvat (Ss ja SS)
+                let valkoisetKuvatListat = { frontPaws: [], backPaws: [], belly: [], neck: [], tail: [], face: [] };
+                if (pentuS === "Ss" || pentuS === "SS") {
+                    valkoisetKuvatListat.frontPaws = getRandomSubarray(whiteMarkingAssets.frontPaws, 0, 1);
+                    valkoisetKuvatListat.backPaws = getRandomSubarray(whiteMarkingAssets.backPaws, 0, 1);
+                    valkoisetKuvatListat.belly = getRandomSubarray(whiteMarkingAssets.belly, 0, 1);
+                    valkoisetKuvatListat.tail = getRandomSubarray(whiteMarkingAssets.tail, 0, 2);
+                    valkoisetKuvatListat.face = getRandomSubarray(whiteMarkingAssets.face, 0, 3);
+
+                    // Kaulakuvat erityissäännöillä
+                    let mahdollisetKaula = [...whiteMarkingAssets.neck.normal];
+                    if (onkoKihara) {
+                        mahdollisetKaula.push(...whiteMarkingAssets.neck.curlyOnly);
+                    } else {
+                        mahdollisetKaula.push(...whiteMarkingAssets.neck.nonCurlyOnly);
+                    }
+                    whiteMarkingAssets.neck.rare.forEach(rKuva => {
+                        if (Math.random() < 0.2) mahdollisetKaula.push(rKuva);
+                    });
+                    valkoisetKuvatListat.neck = getRandomSubarray(mahdollisetKaula, 0, 2);
+                }
+
                 let perusVarinNimi = onkoDiluutio ? "Sininen" : "Musta";
                 if (pentuB.includes("bb")) perusVarinNimi = onkoDiluutio ? "Lila" : "Suklaa";
                 if (pentuB === "b1b1") perusVarinNimi = onkoDiluutio ? "Vaalea kaneli" : "Kaneli";
@@ -741,6 +816,7 @@
                     laikkavari: laikkavari,
                     harjaVari: variHarja,
                     pentuS: pentuS,
+                    valkoisetKuvat: valkoisetKuvatListat,
                     onkoGradient: onkoGradient,
                     pentuV: pentuV,
                     pentuK: pentuK,
@@ -873,6 +949,14 @@
                 }
             }
 
+            // Ladataan S-geenin valkoiset kuvat dynaamisesti listoilta
+            let frontPawsImgs = await Promise.all(opts.valkoisetKuvat.frontPaws.map(url => lataaKuva(url)));
+            let backPawsImgs = await Promise.all(opts.valkoisetKuvat.backPaws.map(url => lataaKuva(url)));
+            let bellyImgs = await Promise.all(opts.valkoisetKuvat.belly.map(url => lataaKuva(url)));
+            let neckImgs = await Promise.all(opts.valkoisetKuvat.neck.map(url => lataaKuva(url)));
+            let tailImgs = await Promise.all(opts.valkoisetKuvat.tail.map(url => lataaKuva(url)));
+            let faceImgs = await Promise.all(opts.valkoisetKuvat.face.map(url => lataaKuva(url)));
+
             const [
                 imgPohja, imgPohjaHarja, imgViiva, imgViivaHarja, 
                 imgSilmät, imgSilmätLineArt, imgNoseSkin, imgNoseViiva, 
@@ -979,13 +1063,32 @@
                     }
                 }
 
+                // Piirretään satunnaiset täplät sekä valitut piirretyt S-geenin valkoiset kuvat
                 if (opts.pentuS === "SS") {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraIsotValkoisetAlueet(bodyCtx, canvas.width, canvas.height, "#ffffff", 5);
                 } else if (opts.pentuS === "Ss") {
                     bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 3);
+                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 2); // Ss:lle vähemmän täpliä
                 }
+
+                // Piirretään dynaamisesti arvotut S-geenin piirretyt valkoiset kuvat
+                const piirraValkoinenKuvioLista = (kuvaListat) => {
+                    kuvaListat.forEach(img => {
+                        if (img) {
+                            bodyCtx.globalCompositeOperation = "source-atop";
+                            bodyCtx.fillStyle = "#ffffff";
+                            bodyCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        }
+                    });
+                };
+
+                piirraValkoinenKuvioLista(frontPawsImgs);
+                piirraValkoinenKuvioLista(backPawsImgs);
+                piirraValkoinenKuvioLista(bellyImgs);
+                piirraValkoinenKuvioLista(neckImgs);
+                piirraValkoinenKuvioLista(tailImgs);
+                piirraValkoinenKuvioLista(faceImgs);
 
                 bodyCtx.globalCompositeOperation = "destination-in";
                 bodyCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
