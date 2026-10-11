@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Genetiikkageneraattori</title>
-    <!-- Ladataan jsPDF kirjasto PDF-tallennusta varten -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -97,9 +95,6 @@
         }
         .btn-download {
             background-color: #34c759;
-        }
-        .btn-pdf {
-            background-color: #af52de;
         }
         #canvas {
             width: 100%;
@@ -356,10 +351,9 @@
     </div>
 
     <div class="card">
-        <canvas id="canvas" width="2163" height="1361"></canvas>
+        <canvas id="canvas" width="2163" height="1461" style="background:#fff;"></canvas>
         <div id="tulos" class="tulos">Valitse vanhemmat ja paina nappia.</div>
         <button class="btn-download" onclick="lataaKuvaLaitteelle()">Lataa kuva laitteelle (PNG)</button>
-        <button class="btn-pdf" onclick="lataaPdfLaitteelle()">Lataa tiedot PDF:nä</button>
     </div>
 
     <script>
@@ -857,9 +851,8 @@
                 }
                 if (kuviotyyppi !== "eikuviota") {
                     fenotyyppiKuvaus += `, kuvio (${kuviotSanaksi})`;
-                    // Korjattu: Kk ja Ee tekevät tummaa/syvää sävyä, eivät vaaleaa
-                    let ääriviivaSävy = pentuK.includes("kk") ? "vaaleampi" : "tummempi";
-                    let keskustaSävy = pentuE.includes("ee") ? "vaaleampi" : "tummempi";
+                    let ääriviivaSävy = pentuK.includes("kk") ? "tummempi" : "tummempi";
+                    let keskustaSävy = pentuE.includes("ee") ? "tummempi" : "tummempi";
                     fenotyyppiKuvaus += ` [ääriviivat: ${ääriviivaSävy}, keskusta: ${keskustaSävy}]`;
                 }
 
@@ -913,7 +906,10 @@
                 if (!url) return resolve(null);
                 const img = new Image();
                 img.onload = () => resolve(img);
-                img.onerror = () => resolve(null);
+                img.onerror = () => {
+                    console.warn("Kuvan lataus epäonnistui: " + url);
+                    resolve(null); // Ohitetaan virhe, jotta ohjelma ei kaadu!
+                };
                 img.src = url;
             });
         }
@@ -1057,60 +1053,45 @@
 
             if (imgPohja) {
                 const bodyCanvas = document.createElement("canvas");
-                bodyCanvas.width = canvas.width; bodyCanvas.height = canvas.height;
+                bodyCanvas.width = 2163; bodyCanvas.height = 1361;
                 const bodyCtx = bodyCanvas.getContext("2d");
 
-                bodyCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
+                bodyCtx.drawImage(imgPohja, 0, 0, 2163, 1361);
                 bodyCtx.globalCompositeOperation = "source-in";
 
                 bodyCtx.fillStyle = opts.kehoVari;
-                bodyCtx.fillRect(0, 0, canvas.width, canvas.height);
+                bodyCtx.fillRect(0, 0, 2163, 1361);
 
                 if (opts.laikkavari) {
                     bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.laikkavari, 8);
+                    piirraCalicoLaikut(bodyCtx, 2163, 1361, opts.laikkavari, 8);
                 }
 
                 if (opts.onkoGradient) {
                     bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraGradient(bodyCtx, canvas.width, canvas.height);
+                    piirraGradient(bodyCtx, 2163, 1361);
                 }
 
                 if (opts.kuviotyyppi !== "eikuviota") {
-                    let outlineTummennus = 0;
+                    let outlineTummennus = 50;
                     let outlineOnkoVaaleampi = false;
 
-                    if (opts.pentuK === "KK") {
-                        outlineTummennus = 90;
-                    } else if (opts.pentuK === "Kk") {
-                        outlineTummennus = 50;
-                    } else {
-                        outlineTummennus = 50;
-                        outlineOnkoVaaleampi = true;
-                    }
+                    if (opts.pentuK === "KK") outlineTummennus = 90;
+                    else if (opts.pentuK === "Kk") outlineTummennus = 50;
 
-                    let centerTummennus = 0;
+                    let centerTummennus = 50;
                     let centerOnkoVaalea = false;
 
                     if (opts.pentuV.includes("V")) {
                         centerTummennus = outlineTummennus;
-                        centerOnkoVaalea = outlineOnkoVaaleampi;
                     } else {
-                        if (opts.pentuE === "EE") {
-                            centerTummennus = 60;
-                            centerOnkoVaalea = false;
-                        } else if (opts.pentuE === "Ee") {
-                            centerTummennus = 20;
-                            centerOnkoVaalea = false;
-                        } else {
-                            centerTummennus = 50;
-                            centerOnkoVaalea = true;
-                        }
+                        if (opts.pentuE === "EE") centerTummennus = 60;
+                        else if (opts.pentuE === "Ee") centerTummennus = 20;
                     }
 
                     function piirraKuvioOsa(imgColor, imgOutline) {
                         let cCanvas = piirraSaumatonMukautuvaKuvio(
-                            imgColor, imgOutline, bodyCanvas, canvas.width, canvas.height, 
+                            imgColor, imgOutline, bodyCanvas, 2163, 1361, 
                             centerTummennus, centerOnkoVaalea, outlineTummennus, outlineOnkoVaaleampi
                         );
                         bodyCtx.globalCompositeOperation = "source-over";
@@ -1122,11 +1103,11 @@
                     if (opts.kuvioFace)  {
                         piirraKuvioOsa(imgFaceColor, imgFaceOutline);
                         if (imgExtraKorvat) {
-                            let kCanvas = piirraSaumatonMukautuvaKuvio(null, imgExtraKorvat, bodyCanvas, canvas.width, canvas.height, 0, false, outlineTummennus, outlineOnkoVaaleampi);
+                            let kCanvas = piirraSaumatonMukautuvaKuvio(null, imgExtraKorvat, bodyCanvas, 2163, 1361, 0, false, outlineTummennus, outlineOnkoVaaleampi);
                             bodyCtx.drawImage(kCanvas, 0, 0);
                         }
                         if (imgExtraKuono) {
-                            let qCanvas = piirraSaumatonMukautuvaKuvio(null, imgExtraKuono, bodyCanvas, canvas.width, canvas.height, 0, false, outlineTummennus, outlineOnkoVaaleampi);
+                            let qCanvas = piirraSaumatonMukautuvaKuvio(null, imgExtraKuono, bodyCanvas, 2163, 1361, 0, false, outlineTummennus, outlineOnkoVaaleampi);
                             bodyCtx.drawImage(qCanvas, 0, 0);
                         }
                     }
@@ -1134,12 +1115,12 @@
 
                 if (pentuN === "Nn") {
                     bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.laikkavari || opts.kehoVari, 3);
+                    piirraCalicoLaikut(bodyCtx, 2163, 1361, opts.laikkavari || opts.kehoVari, 3);
                     
                     nImgs.forEach(img => {
                         if (img) {
                             bodyCtx.fillStyle = opts.laikkavari || opts.kehoVari;
-                            bodyCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            bodyCtx.drawImage(img, 0, 0, 2163, 1361);
                         }
                     });
                 }
@@ -1148,17 +1129,17 @@
                     n1Imgs.forEach(img => {
                         if (img) {
                             const n1TempCanvas = document.createElement("canvas");
-                            n1TempCanvas.width = canvas.width; n1TempCanvas.height = canvas.height;
+                            n1TempCanvas.width = 2163; n1TempCanvas.height = 1361;
                             const n1Ctx = n1TempCanvas.getContext("2d");
 
-                            n1Ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            n1Ctx.drawImage(img, 0, 0, 2163, 1361);
                             n1Ctx.globalCompositeOperation = "source-in";
                             n1Ctx.fillStyle = opts.kehoVari;
-                            n1Ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            n1Ctx.fillRect(0, 0, 2163, 1361);
 
                             if (opts.laikkavari) {
                                 n1Ctx.globalCompositeOperation = "source-atop";
-                                piirraCalicoLaikut(n1Ctx, canvas.width, canvas.height, opts.laikkavari, 6);
+                                piirraCalicoLaikut(n1Ctx, 2163, 1361, opts.laikkavari, 6);
                             }
 
                             bodyCtx.globalCompositeOperation = "source-atop";
@@ -1169,10 +1150,10 @@
 
                 if (opts.pentuS === "SS") {
                     bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraIsotValkoisetAlueet(bodyCtx, canvas.width, canvas.height, "#ffffff", 5);
+                    piirraIsotValkoisetAlueet(bodyCtx, 2163, 1361, "#ffffff", 5);
                 } else if (opts.pentuS === "Ss") {
                     bodyCtx.globalCompositeOperation = "source-atop";
-                    piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, "#ffffff", 2);
+                    piirraCalicoLaikut(bodyCtx, 2163, 1361, "#ffffff", 2);
                 }
 
                 const piirraValkoinenKuvioLista = (kuvaListat) => {
@@ -1180,7 +1161,7 @@
                         if (img) {
                             bodyCtx.globalCompositeOperation = "source-atop";
                             bodyCtx.fillStyle = "#ffffff";
-                            bodyCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            bodyCtx.drawImage(img, 0, 0, 2163, 1361);
                         }
                     });
                 };
@@ -1193,26 +1174,26 @@
                 piirraValkoinenKuvioLista(faceImgs);
 
                 bodyCtx.globalCompositeOperation = "destination-in";
-                bodyCtx.drawImage(imgPohja, 0, 0, canvas.width, canvas.height);
+                bodyCtx.drawImage(imgPohja, 0, 0, 2163, 1361);
 
                 ctx.globalCompositeOperation = "source-over";
                 ctx.drawImage(bodyCanvas, 0, 0);
             }
 
             ctx.globalCompositeOperation = "source-over";
-            if (imgViiva) ctx.drawImage(imgViiva, 0, 0, canvas.width, canvas.height);
+            if (imgViiva) ctx.drawImage(imgViiva, 0, 0, 2163, 1361);
 
             if (imgNoseSkin || imgEarsAndPawsSkin) {
                 const tempSkinCanvas = document.createElement("canvas");
-                tempSkinCanvas.width = canvas.width; tempSkinCanvas.height = canvas.height;
+                tempSkinCanvas.width = 2163; tempSkinCanvas.height = 1361;
                 const tempSkinCtx = tempSkinCanvas.getContext("2d");
 
-                if (imgEarsAndPawsSkin) tempSkinCtx.drawImage(imgEarsAndPawsSkin, 0, 0, canvas.width, canvas.height);
-                if (imgNoseSkin) tempSkinCtx.drawImage(imgNoseSkin, 0, 0, canvas.width, canvas.height);
+                if (imgEarsAndPawsSkin) tempSkinCtx.drawImage(imgEarsAndPawsSkin, 0, 0, 2163, 1361);
+                if (imgNoseSkin) tempSkinCtx.drawImage(imgNoseSkin, 0, 0, 2163, 1361);
 
                 tempSkinCtx.globalCompositeOperation = "source-in";
                 tempSkinCtx.fillStyle = opts.skinColor;
-                tempSkinCtx.fillRect(0, 0, canvas.width, canvas.height);
+                tempSkinCtx.fillRect(0, 0, 2163, 1361);
 
                 ctx.globalCompositeOperation = "source-over";
                 ctx.drawImage(tempSkinCanvas, 0, 0);
@@ -1220,39 +1201,48 @@
 
             if (imgPohjaHarja) {
                 const tempCanvas = document.createElement("canvas");
-                tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
+                tempCanvas.width = 2163; tempCanvas.height = 1361;
                 const tempCtx = tempCanvas.getContext("2d");
 
-                tempCtx.drawImage(imgPohjaHarja, 0, 0, canvas.width, canvas.height);
+                tempCtx.drawImage(imgPohjaHarja, 0, 0, 2163, 1361);
                 tempCtx.globalCompositeOperation = "source-in";
                 tempCtx.fillStyle = opts.harjaVari;
-                tempCtx.fillRect(0, 0, canvas.width, canvas.height);
+                tempCtx.fillRect(0, 0, 2163, 1361);
 
                 ctx.globalCompositeOperation = "source-over";
                 ctx.drawImage(tempCanvas, 0, 0);
             }
-            if (imgViivaHarja) ctx.drawImage(imgViivaHarja, 0, 0, canvas.width, canvas.height);
+            if (imgViivaHarja) ctx.drawImage(imgViivaHarja, 0, 0, 2163, 1361);
 
             if (imgSilmät) {
                 const tempEyeCanvas = document.createElement("canvas");
-                tempEyeCanvas.width = canvas.width; tempEyeCanvas.height = canvas.height;
+                tempEyeCanvas.width = 2163; tempEyeCanvas.height = 1361;
                 const tempEyeCtx = tempEyeCanvas.getContext("2d");
 
-                tempEyeCtx.drawImage(imgSilmät, 0, 0, canvas.width, canvas.height);
+                tempEyeCtx.drawImage(imgSilmät, 0, 0, 2163, 1361);
                 tempEyeCtx.globalCompositeOperation = "source-in";
                 tempEyeCtx.fillStyle = opts.eyeColor;
-                tempEyeCtx.fillRect(0, 0, canvas.width, canvas.height);
+                tempEyeCtx.fillRect(0, 0, 2163, 1361);
 
                 ctx.globalCompositeOperation = "source-over";
                 ctx.drawImage(tempEyeCanvas, 0, 0);
             }
             if (imgSilmätLineArt) {
                 ctx.globalCompositeOperation = "source-over";
-                ctx.drawImage(imgSilmätLineArt, 0, 0, canvas.width, canvas.height);
+                ctx.drawImage(imgSilmätLineArt, 0, 0, 2163, 1361);
             }
 
-            if (imgNoseViiva) ctx.drawImage(imgNoseViiva, 0, 0, canvas.width, canvas.height);
-            if (imgMouthLineart) ctx.drawImage(imgMouthLineart, 0, 0, canvas.width, canvas.height);
+            if (imgNoseViiva) ctx.drawImage(imgNoseViiva, 0, 0, 2163, 1361);
+            if (imgMouthLineart) ctx.drawImage(imgMouthLineart, 0, 0, 2163, 1361);
+
+            // Piirretään tekstit suoraan kuvan alapuolelle (valkoinen tausta alareunassa)
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 1361, 2163, 100);
+            ctx.fillStyle = "#000000";
+            ctx.font = "bold 36px sans-serif";
+            ctx.fillText(`Genotype: ${currentGenotype}`, 50, 1415);
+            ctx.font = "30px sans-serif";
+            ctx.fillText(`Eye color: ${opts.eyeColor}   |   Skin color: ${opts.skinColor}`, 50, 1450);
         }
 
         function lataaKuvaLaitteelle() {
@@ -1263,39 +1253,6 @@
             document.body.appendChild(latausLinkki);
             latausLinkki.click();
             document.body.removeChild(latausLinkki);
-        }
-
-        // Uusi PDF-lataustoiminto (englanninkielinen teksti kuvan alla)
-        async function lataaPdfLaitteelle() {
-            const canvas = document.getElementById("canvas");
-            if (!currentGenotype) {
-                alert("Arvo ensin pentu ennen PDF:n latausta!");
-                return;
-            }
-
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF("p", "mm", "a4");
-
-            // Lisätään kuva PDF:ään (leveys 190mm, keskitetty)
-            const imgData = canvas.toDataURL("image/png");
-            const imgProps = pdf.getImageProperties(imgData);
-            const pdfWidth = 190;
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-            pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth, pdfHeight);
-
-            // Lisätään genotyyppi ja hex-koodit tekstinä kuvan alapuolelle englanniksi
-            let textY = 15 + pdfHeight;
-            pdf.setFont("helvetica", "bold");
-            pdf.setFontSize(12);
-            pdf.text(`Genotype: ${currentGenotype}`, 10, textY);
-
-            pdf.setFont("helvetica", "normal");
-            pdf.setFontSize(10);
-            pdf.text(`Eye color: ${currentEyeHex}`, 10, textY + 6);
-            pdf.text(`Skin color: ${currentSkinHex}`, 10, textY + 12);
-
-            pdf.save(`${currentGenotype}.pdf`);
         }
     </script>
 </body>
