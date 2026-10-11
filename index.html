@@ -1073,7 +1073,28 @@
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraGradient(bodyCtx, 2163, 1361);
                 }
+                if (opts.pentuN === "N1n") {
+                    n1Imgs.forEach(img => {
+                        if (img) {
+                            const n1TempCanvas = document.createElement("canvas");
+                            n1TempCanvas.width = 2163; n1TempCanvas.height = 1361;
+                            const n1Ctx = n1TempCanvas.getContext("2d");
 
+                            n1Ctx.drawImage(img, 0, 0, 2163, 1361);
+                            n1Ctx.globalCompositeOperation = "source-in";
+                            n1Ctx.fillStyle = opts.kehoVari;
+                            n1Ctx.fillRect(0, 0, 2163, 1361);
+
+                            if (opts.laikkavari) {
+                                n1Ctx.globalCompositeOperation = "source-atop";
+                                piirraCalicoLaikut(n1Ctx, 2163, 1361, opts.laikkavari, 6);
+                            }
+
+                            bodyCtx.globalCompositeOperation = "source-atop";
+                            bodyCtx.drawImage(n1TempCanvas, 0, 0);
+                        }
+                    });
+                }
                 if (opts.kuviotyyppi !== "eikuviota") {
                     let outlineTummennus = 50;
                     let outlineOnkoVaaleampi = false;
@@ -1123,29 +1144,6 @@
                         if (img) {
                             bodyCtx.fillStyle = opts.laikkavari || opts.kehoVari;
                             bodyCtx.drawImage(img, 0, 0, 2163, 1361);
-                        }
-                    });
-                }
-
-                if (opts.pentuN === "N1n") {
-                    n1Imgs.forEach(img => {
-                        if (img) {
-                            const n1TempCanvas = document.createElement("canvas");
-                            n1TempCanvas.width = 2163; n1TempCanvas.height = 1361;
-                            const n1Ctx = n1TempCanvas.getContext("2d");
-
-                            n1Ctx.drawImage(img, 0, 0, 2163, 1361);
-                            n1Ctx.globalCompositeOperation = "source-in";
-                            n1Ctx.fillStyle = opts.kehoVari;
-                            n1Ctx.fillRect(0, 0, 2163, 1361);
-
-                            if (opts.laikkavari) {
-                                n1Ctx.globalCompositeOperation = "source-atop";
-                                piirraCalicoLaikut(n1Ctx, 2163, 1361, opts.laikkavari, 6);
-                            }
-
-                            bodyCtx.globalCompositeOperation = "source-atop";
-                            bodyCtx.drawImage(n1TempCanvas, 0, 0);
                         }
                     });
                 }
