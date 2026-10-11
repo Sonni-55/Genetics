@@ -578,13 +578,14 @@
             else if (genotyyppi === "aa") alleelit = ["a", "a"];
             else if (genotyyppi === "aa1") alleelit = ["a", "a1"];
             else if (genotyyppi === "a1a1") alleelit = ["a1", "a1"];
+            // Korjattu N1- ja N-alleelien purku:
             else if (genotyyppi === "N1N") alleelit = ["N1", "N"];
             else if (genotyyppi === "N1n") alleelit = ["N1", "n"];
             else if (genotyyppi === "N1N1") alleelit = ["N1", "N1"];
             else if (genotyyppi === "NN") alleelit = ["N", "N"];
             else if (genotyyppi === "Nn") alleelit = ["N", "n"];
             else if (genotyyppi === "nn") alleelit = ["n", "n"];
-            else alleelit = [genotyyppi.substring(0, genotyyppi.length/2), genotyyppi.substring(genotyyppi.length/2)];
+            else alleelit = [genotyyppi[0], genotyyppi[1]];
 
             return alleelit[Math.floor(Math.random() * 2)];
         }
