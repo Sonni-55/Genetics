@@ -585,8 +585,8 @@
             else if (genotyyppi === "NN") alleelit = ["N", "N"];
             else if (genotyyppi === "Nn") alleelit = ["N", "n"];
             else if (genotyyppi === "nn") alleelit = ["n", "n"];
-            else alleelit = [genotyyppi[0], genotyyppi[1]];
-
+            else alleelit = [genotyyppi.substring(0, genotyyppi.length/2), genotyyppi.substring(genotyyppi.length/2)];
+ 
             return alleelit[Math.floor(Math.random() * 2)];
         }
 
