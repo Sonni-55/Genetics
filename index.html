@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Genetiikkageneraattori</title>
+    <!-- Ladataan jsPDF kirjasto PDF-tallennusta varten -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -88,13 +90,16 @@
             cursor: pointer;
             padding: 12px;
             font-size: 15px;
+            margin-top: 6px;
         }
         .btn-random {
             background-color: #ff9500;
         }
         .btn-download {
             background-color: #34c759;
-            margin-top: 8px;
+        }
+        .btn-pdf {
+            background-color: #af52de;
         }
         #canvas {
             width: 100%;
@@ -354,6 +359,7 @@
         <canvas id="canvas" width="2163" height="1361"></canvas>
         <div id="tulos" class="tulos">Valitse vanhemmat ja paina nappia.</div>
         <button class="btn-download" onclick="lataaKuvaLaitteelle()">Lataa kuva laitteelle (PNG)</button>
+        <button class="btn-pdf" onclick="lataaPdfLaitteelle()">Lataa tiedot PDF:nä</button>
     </div>
 
     <script>
@@ -384,7 +390,6 @@
         const faceExtraKorvat = "Untitled311_20261009195258.png";
         const faceExtraKuono  = "Untitled311_20261009195304.png";
 
-        // Uudet N- ja N1-kuvat
         const nAssets = [
             "Untitled313_20261011130457.png",
             "Untitled313_20261011130542.png",
@@ -496,6 +501,8 @@
         };
 
         let currentGenotype = "";
+        let currentEyeHex = "";
+        let currentSkinHex = "";
 
         document.getElementById("isa_eyes").addEventListener("input", (e) => { document.getElementById("isa_eyes_hex").value = e.target.value.toUpperCase(); });
         document.getElementById("isa_eyes_hex").addEventListener("input", (e) => { if (/^#[0-9A-F]{6}$/i.test(e.target.value)) document.getElementById("isa_eyes").value = e.target.value; });
@@ -578,14 +585,13 @@
             else if (genotyyppi === "aa") alleelit = ["a", "a"];
             else if (genotyyppi === "aa1") alleelit = ["a", "a1"];
             else if (genotyyppi === "a1a1") alleelit = ["a1", "a1"];
-            // Korjattu N1- ja N-alleelien purku:
             else if (genotyyppi === "N1N") alleelit = ["N1", "N"];
             else if (genotyyppi === "N1n") alleelit = ["N1", "n"];
             else if (genotyyppi === "N1N1") alleelit = ["N1", "N1"];
             else if (genotyyppi === "NN") alleelit = ["N", "N"];
             else if (genotyyppi === "Nn") alleelit = ["N", "n"];
             else if (genotyyppi === "nn") alleelit = ["n", "n"];
-            else alleelit = [genotyyppi[0], genotyyppi[1]];
+            else alleelit = [genotyyppi.substring(0, genotyyppi.length/2), genotyyppi.substring(genotyyppi.length/2)];
 
             return alleelit[Math.floor(Math.random() * 2)];
         }
@@ -721,6 +727,8 @@
                 let pentuNose = Math.random() < 0.5 ? document.getElementById("isa_nose").value : document.getElementById("ema_nose").value;
 
                 currentGenotype = `${pentuM}_${pentuS}_${pentuC}_${pentuB}_${pentuD}_${pentuH}_${pentuO}_${pentuN}_${pentuG}_${pentuA}_${pentuP}_${pentuR}_${pentuV}_${pentuK}_${pentuE}`;
+                currentEyeHex = pentuEyeColor;
+                currentSkinHex = pentuSkinColor;
 
                 let onkoHarja = pentuM.includes("M");
                 let onkoKihara = (pentuC === "cc");
@@ -762,7 +770,7 @@
                     paavari = variTumma;
                 } else if (pentuN === "nn") {
                     paavari = variPunainen;
-                } else { // Nn tai N1n (kilpikonna)
+                } else { 
                     if (Math.random() < 0.5) {
                         paavari = variPunainen; laikkavari = variTumma;
                     } else {
@@ -806,19 +814,17 @@
                 let onkoExtraKorvat = kuvioFace && (Math.random() < 0.5);
                 let onkoExtraKuono  = kuvioFace && (Math.random() < 0.5);
 
-                // N- ja N1-kuvien keräys
                 let selectedNImagePaths = [];
                 let selectedN1ImagePaths = [];
 
                 if (pentuN === "Nn") {
                     let allN = [...nAssets];
-                    if (Math.random() < 0.1) allN.push(nRareAsset); // harvinainen n. 1/10
+                    if (Math.random() < 0.1) allN.push(nRareAsset);
                     selectedNImagePaths = getRandomSubarray(allN, 0, allN.length);
                 } else if (pentuN === "N1n") {
                     selectedN1ImagePaths = getRandomSubarray(n1Assets, 1, 2);
                 }
 
-                // S-geenin valkoiset lisäkuvat (Ss ja SS)
                 let valkoisetKuvatListat = { frontPaws: [], backPaws: [], belly: [], neck: [], tail: [], face: [] };
                 if (pentuS === "Ss" || pentuS === "SS") {
                     valkoisetKuvatListat.frontPaws = getRandomSubarray(whiteMarkingAssets.frontPaws, 0, 1);
@@ -851,8 +857,9 @@
                 }
                 if (kuviotyyppi !== "eikuviota") {
                     fenotyyppiKuvaus += `, kuvio (${kuviotSanaksi})`;
-                    let ääriviivaSävy = pentuK.includes("k") ? "vaaleampi" : "tummempi";
-                    let keskustaSävy = pentuE.includes("e") ? "vaaleampi" : "tummempi";
+                    // Korjattu: Kk ja Ee tekevät tummaa/syvää sävyä, eivät vaaleaa
+                    let ääriviivaSävy = pentuK.includes("kk") ? "vaaleampi" : "tummempi";
+                    let keskustaSävy = pentuE.includes("ee") ? "vaaleampi" : "tummempi";
                     fenotyyppiKuvaus += ` [ääriviivat: ${ääriviivaSävy}, keskusta: ${keskustaSävy}]`;
                 }
 
@@ -1125,7 +1132,6 @@
                     }
                 }
 
-                // Nn: Random täplät + piirretyt N-kuvat samalla värillä
                 if (pentuN === "Nn") {
                     bodyCtx.globalCompositeOperation = "source-atop";
                     piirraCalicoLaikut(bodyCtx, canvas.width, canvas.height, opts.laikkavari || opts.kehoVari, 3);
@@ -1138,7 +1144,6 @@
                     });
                 }
 
-                // N1n: Piirretyt N1-kuvat kilpikonnakuvio-maskauksella (ei random täpliä)
                 if (pentuN === "N1n") {
                     n1Imgs.forEach(img => {
                         if (img) {
@@ -1258,6 +1263,39 @@
             document.body.appendChild(latausLinkki);
             latausLinkki.click();
             document.body.removeChild(latausLinkki);
+        }
+
+        // Uusi PDF-lataustoiminto (englanninkielinen teksti kuvan alla)
+        async function lataaPdfLaitteelle() {
+            const canvas = document.getElementById("canvas");
+            if (!currentGenotype) {
+                alert("Arvo ensin pentu ennen PDF:n latausta!");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF("p", "mm", "a4");
+
+            // Lisätään kuva PDF:ään (leveys 190mm, keskitetty)
+            const imgData = canvas.toDataURL("image/png");
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = 190;
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+            pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth, pdfHeight);
+
+            // Lisätään genotyyppi ja hex-koodit tekstinä kuvan alapuolelle englanniksi
+            let textY = 15 + pdfHeight;
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(12);
+            pdf.text(`Genotype: ${currentGenotype}`, 10, textY);
+
+            pdf.setFont("helvetica", "normal");
+            pdf.setFontSize(10);
+            pdf.text(`Eye color: ${currentEyeHex}`, 10, textY + 6);
+            pdf.text(`Skin color: ${currentSkinHex}`, 10, textY + 12);
+
+            pdf.save(`${currentGenotype}.pdf`);
         }
     </script>
 </body>
